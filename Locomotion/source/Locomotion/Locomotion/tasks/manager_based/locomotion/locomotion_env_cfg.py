@@ -34,7 +34,7 @@ from . import mdp
 
 @configclass
 class LocomotionSceneCfg(InteractiveSceneCfg):
-    """Configuration for a cart-pole scene."""
+    """Configuration for a ava scene."""
 
     # ground plane
     ground = AssetBaseCfg(
@@ -82,8 +82,8 @@ class LocomotionSceneCfg(InteractiveSceneCfg):
         actuators={
             "all": ImplicitActuatorCfg(  # for now, implicit. Later, explicit.
                 joint_names_expr=[".*"],  # motor is applied to all joints
-                effort_limit=400.0,
-                velocity_limit=100.0,
+                effort_limit_sim=400.0,
+                velocity_limit_sim=100.0,
                 stiffness=10.0,
                 damping=1.0
             ),
@@ -106,7 +106,11 @@ class LocomotionSceneCfg(InteractiveSceneCfg):
 class ActionsCfg:
     """Action specifications for the MDP."""
 
-    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*"], scale=100.0)
+    joint_effort = mdp.JointEffortActionCfg(
+        asset_name="robot",
+        joint_names=[".*"],
+        scale=5.0,  # replace with actual value
+    )
 
 
 @configclass
@@ -133,54 +137,94 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    # reset
-    reset_cart_position = EventTerm(
+    # on reset, we want to randomize the position and velocities
+    # of the joints by a little bit
+    reset_joint_pos_vel = EventTerm(  # we should rename this
         func=mdp.reset_joints_by_offset,
         mode="reset",
         params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]),
-            "position_range": (-1.0, 1.0),
-            "velocity_range": (-0.5, 0.5),
+            "asset_cfg": SceneEntityCfg("robot",
+                                        joint_names=[".*"]),  # all joints
+            "position_range": (-1.0, 1.0),  # radians
+            "velocity_range": (-0.5, 0.5),  # rad/s ?
         },
     )
 
-    reset_pole_position = EventTerm(
-        func=mdp.reset_joints_by_offset,
-        mode="reset",
-        params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=["cart_to_pole"]),
-            "position_range": (-0.25 * math.pi, 0.25 * math.pi),
-            "velocity_range": (-0.25 * math.pi, 0.25 * math.pi),
-        },
-    )
+    # # NOT DONE, but something we want
+    # # randomizes the whole sale of the USD
+    # reset_randomize_body_scale = EventTerm(
+    #     func=mdp.randomize_rigid_body_scale,
+    #     mode="reset",
+    #     params={
+    #         "asset_cfg": SceneEntityCfg()
+    #     }
+    # )
+    
+    # # NOT DONE, but something we want
+    # # applies a random COM to the robot by modifying weights
+    # reset_randomize_com = EventTerm(
+    #     func=mdp.randomize_rigid_body_com,
+    #     mode="reset",
+    #     params=
+    #     ...
+    # )
+
+    # # NOT DONE, but something we want
+    # # applies an external force (or torque) distributed to the body
+    # # intermittently throughout the instance's lifespan
+    # intermittent_external_force = EventTerm(
+    #     func=mdp.apply_external_force_torque,
+    #     mode="intermittent",
+    #     interval_range_s=(1.0, 5.0),  # randomly at period of 1 to 5 sec
+    # )
+
+
+
+    # # NOT DONE, but something we (may) want
+    # # when the robot instance is created, have it start off with a nudge
+    # # as an initial velocity
+    # reset_robot_push = EventTerm(
+    #     func=mdp.push_by_setting_velocity,
+    #     mode="reset",
+
+    # )
+
+
 
 
 @configclass
 class RewardsCfg:
-    """Reward terms for the MDP."""
+    """Reward terms for the MDP.
+        RewTerm:
+            - func : A callable from MDP module that extracts some measurement from sim state
+            - weight : how much weight does the reward term carry
+            - params : a dictionary of extra arguments which define 
+                       how signal is measured (which joints, which target val)
+    """
+
 
     # (1) Constant running reward
     alive = RewTerm(func=mdp.is_alive, weight=1.0)
-    # (2) Failure penalty
-    terminating = RewTerm(func=mdp.is_terminated, weight=-2.0)
-    # (3) Primary task: keep pole upright
-    pole_pos = RewTerm(
-        func=mdp.joint_pos_target_l2,
-        weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "target": 0.0},
-    )
-    # (4) Shaping tasks: lower cart velocity
-    cart_vel = RewTerm(
-        func=mdp.joint_vel_l1,
-        weight=-0.01,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"])},
-    )
-    # (5) Shaping tasks: lower pole angular velocity
-    pole_vel = RewTerm(
-        func=mdp.joint_vel_l1,
-        weight=-0.005,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"])},
-    )
+    # # (2) Failure penalty
+    # terminating = RewTerm(func=mdp.is_terminated, weight=-2.0)
+    # # (3) Primary task: keep pole upright
+    # pole_pos = RewTerm(
+    #     func=mdp.joint_pos_target_l2,
+    #     weight=-1.0,
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "target": 0.0},
+    # )
+    # # (4) Shaping tasks: lower cart velocity
+    # cart_vel = RewTerm(
+    #     func=mdp.joint_vel_l1,
+    #     weight=-0.01,
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"])},
+    # )
+    # # (5) Shaping tasks: lower pole angular velocity
+    # pole_vel = RewTerm(
+    #     func=mdp.joint_vel_l1,
+    #     weight=-0.005,
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"])},
+    # )
 
 
 @configclass
@@ -189,11 +233,11 @@ class TerminationsCfg:
 
     # (1) Time out
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
-    # (2) Cart out of bounds
-    cart_out_of_bounds = DoneTerm(
-        func=mdp.joint_pos_out_of_manual_limit,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "bounds": (-3.0, 3.0)},
-    )
+    # # (2) Cart out of bounds
+    # cart_out_of_bounds = DoneTerm(
+    #     func=mdp.joint_pos_out_of_manual_limit,
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "bounds": (-3.0, 3.0)},
+    # )
 
 
 ##
