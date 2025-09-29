@@ -1,0 +1,1787 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="FinleyJNEWARMS_2024_straight_4">
+  <link
+    name="chest">
+    <inertial>
+      <origin
+        xyz="1.50022779973088E-06 -0.0567961915924867 0.766213151862957"
+        rpy="0 0 0" />
+      <mass
+        value="0.602613953983156" />
+      <inertia
+        ixx="0.000529918720666865"
+        ixy="-3.76128406334882E-08"
+        ixz="-1.47322605674761E-08"
+        iyy="0.000808334499746961"
+        iyz="2.57802169598134E-05"
+        izz="0.000957595777026704" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/chest.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/chest.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="shoulder1_left">
+    <inertial>
+      <origin
+        xyz="0.0113764183101848 -0.00413267363637027 -0.0114631689738596"
+        rpy="0 0 0" />
+      <mass
+        value="0.0104989821167457" />
+      <inertia
+        ixx="6.19340879843905E-06"
+        ixy="2.82653422717498E-21"
+        ixz="1.06020563594117E-07"
+        iyy="6.88183260609746E-06"
+        iyz="3.83664477384125E-20"
+        izz="2.10368331977384E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/shoulder1_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/shoulder1_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="shoulder1_left"
+    type="revolute">
+    <origin
+      xyz="0.0919 -0.076 0.77154"
+      rpy="1.5708 0 0" />
+    <parent
+      link="chest" />
+    <child
+      link="shoulder1_left" />
+    <axis
+      xyz="-1 0 0" />
+    <!-- <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="shoulder2_left">
+    <inertial>
+      <origin
+        xyz="0.00099208917002809 -0.00393139327376102 0.0717688932963043"
+        rpy="0 0 0" />
+      <mass
+        value="0.266250378486095" />
+      <inertia
+        ixx="0.000120081365537198"
+        ixy="5.28014544589101E-11"
+        ixz="-1.07276812645236E-06"
+        iyy="0.000120725557218146"
+        iyz="-1.08491342551985E-06"
+        izz="7.76746668809631E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/shoulder2_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.149019607843137 0.149019607843137 0.149019607843137 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/shoulder2_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="shoulder2_left"
+    type="revolute">
+    <origin
+      xyz="0.0252 0 -0.01"
+      rpy="0.83454 1.5708 0.83454" />
+    <parent
+      link="shoulder1_left" />
+    <child
+      link="shoulder2_left" />
+    <axis
+      xyz="1 0 0" />
+    <!-- <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="elbow_left">
+    <inertial>
+      <origin
+        xyz="-0.00424627029965885 -0.0560536247002583 0.000533260431352378"
+        rpy="0 0 0" />
+      <mass
+        value="0.0826601133678333" />
+      <inertia
+        ixx="2.29401639573521E-05"
+        ixy="-1.53754694873514E-09"
+        ixz="6.97719276899595E-09"
+        iyy="2.23632226277628E-05"
+        iyz="-1.86826223854824E-07"
+        izz="2.00500296625904E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/elbow_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/elbow_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="elbow_left"
+    type="revolute">
+    <origin
+      xyz="0.0012292 0.0025 0.1428"
+      rpy="-1.5708 0 1.5708" />
+    <parent
+      link="shoulder2_left" />
+    <child
+      link="elbow_left" />
+    <axis
+      xyz="-1 0 0" />
+    <!-- <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="forearm_left">
+    <inertial>
+      <origin
+        xyz="-0.0217322025023186 -0.00713266415920033 0.000711058364011335"
+        rpy="0 0 0" />
+      <mass
+        value="0.0775832833087505" />
+      <inertia
+        ixx="1.41357225954703E-05"
+        ixy="-1.5751074983882E-07"
+        ixz="2.0437448699644E-07"
+        iyy="1.85114250117787E-05"
+        iyz="-3.77076381319702E-08"
+        izz="2.32612968414306E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/forearm_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/forearm_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="forearm_left"
+    type="revolute">
+    <origin
+      xyz="0 -0.079704 0.013413"
+      rpy="-3.1416 0.032693 1.5708" />
+    <parent
+      link="elbow_left" />
+    <child
+      link="forearm_left" />
+    <axis
+      xyz="-1 0 0" />
+    <!-- <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="wrist_left">
+    <inertial>
+      <origin
+        xyz="0.00363190136829261 -0.000636489521627245 -0.0779539720010361"
+        rpy="0 0 0" />
+      <mass
+        value="0.0990469296047515" />
+      <inertia
+        ixx="2.88672321130928E-05"
+        ixy="6.46674429514094E-08"
+        ixz="7.22025587509519E-07"
+        iyy="3.2233831259012E-05"
+        iyz="-2.38931788941603E-06"
+        izz="1.6669707918352E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/wrist_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/wrist_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="wrist_left"
+    type="revolute">
+    <origin
+      xyz="-0.04367 -0.005776 0.0007464"
+      rpy="-1.5854 0.0070899 -1.5709" />
+    <parent
+      link="forearm_left" />
+    <child
+      link="wrist_left" />
+    <axis
+      xyz="-1 0 0" />
+    <!-- <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="hand_left">
+    <inertial>
+      <origin
+        xyz="0.000232111766866216 -0.0295401458229978 -0.000555476350772077"
+        rpy="0 0 0" />
+      <mass
+        value="0.0401316907730667" />
+      <inertia
+        ixx="2.24526556478099E-05"
+        ixy="4.76747078328107E-07"
+        ixz="-2.00585349730929E-07"
+        iyy="1.11900146947491E-05"
+        iyz="2.66073296726809E-06"
+        izz="2.96366339435449E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hand_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hand_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hand_left"
+    type="revolute">
+    <origin
+      xyz="0.0028674 0.0011406 -0.10753"
+      rpy="1.6086 -0.017309 -0.0077456" />
+    <parent
+      link="wrist_left" />
+    <child
+      link="hand_left" />
+    <axis
+      xyz="-1 0 0" />
+    <!-- <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="neck">
+    <inertial>
+      <origin
+        xyz="0.0159736735048791 0.000290643127388679 0.0115826136709445"
+        rpy="0 0 0" />
+      <mass
+        value="0.0666495855989213" />
+      <inertia
+        ixx="1.62630461655661E-05"
+        ixy="-8.27629921809656E-08"
+        ixz="1.7653889519622E-10"
+        iyy="1.30479568132621E-05"
+        iyz="-2.16336580638525E-07"
+        izz="9.6285476565152E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/neck.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/neck.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="neck"
+    type="revolute">
+    <origin
+      xyz="0 -0.0578 0.82214"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="chest" />
+    <child
+      link="neck" />
+    <axis
+      xyz="1 0 0" />
+    <!-- <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="head">
+    <inertial>
+      <origin
+        xyz="-8.29760465570505E-05 0.0479764279374292 0.0311606328864328"
+        rpy="0 0 0" />
+      <mass
+        value="0.243879389138217" />
+      <inertia
+        ixx="0.000728248800634263"
+        ixy="8.34432890957276E-07"
+        ixz="1.0653499511857E-06"
+        iyy="0.00107558009453939"
+        iyz="1.17568259317083E-05"
+        izz="0.0005777684757579" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/head.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 1 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/head.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="head"
+    type="revolute">
+    <origin
+      xyz="0.016967 0.0013169 0"
+      rpy="0 0 -1.5708" />
+    <parent
+      link="neck" />
+    <child
+      link="head" />
+    <axis
+      xyz="-1 0 0" />
+    <!-- <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="camera">
+    <inertial>
+      <origin
+        xyz="0.000289507729321172 -0.00500216251915009 -0.00762917664742142"
+        rpy="0 0 0" />
+      <mass
+        value="0.0191124722079641" />
+      <inertia
+        ixx="1.53669877769754E-06"
+        ixy="1.44226261597625E-08"
+        ixz="1.97178631696981E-09"
+        iyy="1.37717679254803E-05"
+        iyz="-4.67944515652889E-09"
+        izz="1.49683583321302E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/camera.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/camera.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="camera"
+    type="revolute">
+    <origin
+      xyz="1.6947E-05 0.10414 0.072931"
+      rpy="0 0 0" />
+    <parent
+      link="head" />
+    <child
+      link="camera" />
+    <axis
+      xyz="0 -1 0" />
+    <!-- <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" /> -->
+  </joint>
+  <link
+    name="shoulder1_right">
+    <inertial>
+      <origin
+        xyz="0.00782358336580476 0.0140000000000133 -0.00146316897385344"
+        rpy="0 0 0" />
+      <mass
+        value="0.0104989821167456" />
+      <inertia
+        ixx="6.19340879843903E-06"
+        ixy="-1.74939766666686E-22"
+        ixz="-1.06020563594099E-07"
+        iyy="6.88183260609743E-06"
+        iyz="-4.17916829144077E-22"
+        izz="2.10368331977384E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/shoulder1_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/shoulder1_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="shoulder1_right"
+    type="revolute">
+    <origin
+      xyz="-0.1111 -0.066 0.75341"
+      rpy="1.5708 0 0" />
+    <parent
+      link="chest" />
+    <child
+      link="shoulder1_right" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="shoulder2_right">
+    <inertial>
+      <origin
+        xyz="-0.0413900860591923 -0.0147920891678454 -0.0137987196382687"
+        rpy="0 0 0" />
+      <mass
+        value="0.266250378497971" />
+      <inertia
+        ixx="7.7674666735854E-05"
+        ixy="-1.0727681248375E-06"
+        ixz="1.08491342403731E-06"
+        iyy="0.00012008136553807"
+        iyz="-5.28037994955851E-11"
+        izz="0.000120725557080084" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/shoulder2_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.149019607843137 0.149019607843137 0.149019607843137 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/shoulder2_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="shoulder2_right"
+    type="revolute">
+    <origin
+      xyz="-0.036379 0 0.0138"
+      rpy="1.5708 0 0" />
+    <parent
+      link="shoulder1_right" />
+    <child
+      link="shoulder2_right" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="elbow_right">
+    <inertial>
+      <origin
+        xyz="0.0116135966669894 0.0194588983314362 0.00129928150451235"
+        rpy="0 0 0" />
+      <mass
+        value="0.0826601133515505" />
+      <inertia
+        ixx="2.29401639533183E-05"
+        ixy="1.76479861879307E-09"
+        ixz="6.92321100118674E-09"
+        iyy="2.23729582875121E-05"
+        iyz="1.10854731501213E-07"
+        izz="2.00402939877248E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/elbow_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/elbow_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="elbow_right"
+    type="revolute">
+    <origin
+      xyz="-0.18788 -0.012561 0"
+      rpy="1.6035 1.5708 0" />
+    <parent
+      link="shoulder2_right" />
+    <child
+      link="elbow_right" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="forearm_right">
+    <inertial>
+      <origin
+        xyz="0.0145027814006548 0.035367797503198 -0.000342095184619175"
+        rpy="0 0 0" />
+      <mass
+        value="0.0775832832500245" />
+      <inertia
+        ixx="1.85111290788103E-05"
+        ixy="1.5605738408396E-07"
+        ixz="4.01865484436815E-09"
+        iyy="1.4135722585926E-05"
+        iyz="2.05486410831663E-07"
+        izz="2.32615927511384E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/forearm_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/forearm_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="forearm_right"
+    type="revolute">
+    <origin
+      xyz="0 -0.0617 -0.009644"
+      rpy="0 0.007092 0" />
+    <parent
+      link="elbow_right" />
+    <child
+      link="forearm_right" />
+    <axis
+      xyz="0.99997 0 0.007092" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="wrist_right">
+    <inertial>
+      <origin
+        xyz="-5.6063520893837E-05 0.0530277504350653 -0.0158643975908435"
+        rpy="0 0 0" />
+      <mass
+        value="0.0990469293943151" />
+      <inertia
+        ixx="3.22612830444911E-05"
+        ixy="2.29870642975517E-06"
+        ixz="-2.07710716738948E-08"
+        iyy="1.66209611114322E-05"
+        iyz="5.1093944727544E-07"
+        izz="2.88885270120892E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/wrist_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/wrist_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="wrist_right"
+    type="revolute">
+    <origin
+      xyz="0 -0.011772 0.00032413"
+      rpy="1.5534 1.5503 -1.571" />
+    <parent
+      link="forearm_right" />
+    <child
+      link="wrist_right" />
+    <axis
+      xyz="0.0070945 -0.017304 0.99983" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="hand_right">
+    <inertial>
+      <origin
+        xyz="0.00185086833685938 0.0115893616160188 -0.0165468410480407"
+        rpy="0 0 0" />
+      <mass
+        value="0.0401316907730667" />
+      <inertia
+        ixx="2.98331064496576E-05"
+        ixy="1.8484168805577E-06"
+        ixz="-1.79642098291782E-07"
+        iyy="1.09935421886364E-05"
+        iyz="4.85026778376593E-07"
+        izz="2.245265564781E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hand_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.698039215686274 0.698039215686274 0.698039215686274 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hand_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hand_right"
+    type="revolute">
+    <origin
+      xyz="0.0020123 0.10047 0.0017246"
+      rpy="0 0.0078497 0" />
+    <parent
+      link="wrist_right" />
+    <child
+      link="hand_right" />
+    <axis
+      xyz="0.00075399 0.017304 -0.99985" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="back">
+    <inertial>
+      <origin
+        xyz="-1.44140733175922E-06 0.0143265162485028 0.0226653926994822"
+        rpy="0 0 0" />
+      <mass
+        value="0.0646141406188935" />
+      <inertia
+        ixx="1.526153314674E-05"
+        ixy="1.32400043523147E-09"
+        ixz="-1.76178089424595E-10"
+        iyy="1.39416031460188E-05"
+        iyz="1.78050081913823E-07"
+        izz="8.1482600757026E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/back.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.309803921568627 0.309803921568627 0.309803921568627 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/back.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="back"
+    type="revolute">
+    <origin
+      xyz="0 -0.03923 0.68471"
+      rpy="0 0 0" />
+    <parent
+      link="chest" />
+    <child
+      link="back" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="middle">
+    <inertial>
+      <origin
+        xyz="-0.0239047387315467 -0.0109096628046461 -0.0106406365714009"
+        rpy="0 0 0" />
+      <mass
+        value="0.0836698843876811" />
+      <inertia
+        ixx="3.22514894888575E-05"
+        ixy="-1.20880004238901E-09"
+        ixz="1.18887102222951E-06"
+        iyy="2.64401728266732E-05"
+        iyz="2.16278550295655E-07"
+        izz="1.88172214051236E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/middle.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.309803921568627 0.309803921568627 0.309803921568627 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/middle.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="middle"
+    type="revolute">
+    <origin
+      xyz="0.01 0 0"
+      rpy="3.1416 0 1.5708" />
+    <parent
+      link="back" />
+    <child
+      link="middle" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="stomach">
+    <inertial>
+      <origin
+        xyz="-6.9272255153385E-07 0.0285352127144998 0.00558150860683709"
+        rpy="0 0 0" />
+      <mass
+        value="0.112924076525719" />
+      <inertia
+        ixx="9.75029935531688E-05"
+        ixy="1.37283764271522E-09"
+        ixz="1.30075566767189E-10"
+        iyy="9.65112485177255E-05"
+        iyz="-5.46427571087416E-07"
+        izz="3.79806778597126E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/stomach.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.309803921568627 0.309803921568627 0.309803921568627 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/stomach.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="stomach"
+    type="revolute">
+    <origin
+      xyz="-0.0381 -0.0089 0.0298"
+      rpy="1.5708 0 1.5708" />
+    <parent
+      link="middle" />
+    <child
+      link="stomach" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="back_pelvic">
+    <inertial>
+      <origin
+        xyz="0.015489665228807 -0.0145430444948929 -1.10579476777541E-08"
+        rpy="0 0 0" />
+      <mass
+        value="0.127534330375796" />
+      <inertia
+        ixx="3.3193918593675E-05"
+        ixy="-1.08642346422578E-06"
+        ixz="1.22187690073671E-11"
+        iyy="4.49529966250637E-05"
+        iyz="-6.32660819139931E-11"
+        izz="5.31790636314383E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/back_pelvic.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.149019607843137 0.149019607843137 0.149019607843137 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/back_pelvic.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="back_pelvic"
+    type="revolute">
+    <origin
+      xyz="0 0.060209 0.0485"
+      rpy="1.5708 0 1.5708" />
+    <parent
+      link="stomach" />
+    <child
+      link="back_pelvic" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="front_pelvic">
+    <inertial>
+      <origin
+        xyz="0.00111304666442034 0.0273168725907406 0.0143303027007092"
+        rpy="0 0 0" />
+      <mass
+        value="0.147883606813273" />
+      <inertia
+        ixx="5.05330566773514E-05"
+        ixy="1.08454016373948E-06"
+        ixz="-6.04432660460033E-10"
+        iyy="4.62023852899694E-05"
+        iyz="-1.41119876957864E-06"
+        izz="6.8423104855184E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/front_pelvic.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/front_pelvic.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="front_pelvic"
+    type="revolute">
+    <origin
+      xyz="0.049529 -0.0405 -0.0009"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="back_pelvic" />
+    <child
+      link="front_pelvic" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="hip_in_left">
+    <inertial>
+      <origin
+        xyz="-0.00338789745115985 0.015112271408179 0.000418435130019656"
+        rpy="0 0 0" />
+      <mass
+        value="0.0712276175933123" />
+      <inertia
+        ixx="2.06860531072906E-05"
+        ixy="-2.21932312807994E-08"
+        ixz="1.07254771724795E-06"
+        iyy="1.62453359174993E-05"
+        iyz="1.87073721310908E-07"
+        izz="1.37712549368653E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_in_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.309803921568627 0.309803921568627 0.309803921568627 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_in_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_in_left"
+    type="revolute">
+    <origin
+      xyz="0.018 -0.05515 -0.015"
+      rpy="1.5708 0 3.1416" />
+    <parent
+      link="front_pelvic" />
+    <child
+      link="hip_in_left" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="hip_out_left">
+    <inertial>
+      <origin
+        xyz="-1.55318562385098E-06 0.0156156129903247 4.19905668221018E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.0601134488684265" />
+      <inertia
+        ixx="1.42260371374465E-05"
+        ixy="1.3238870021687E-09"
+        ixz="-1.76534059941123E-10"
+        iyy="1.22317140792489E-05"
+        iyz="2.16336544902616E-07"
+        izz="7.31878051379373E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_out_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.309803921568627 0.309803921568627 0.309803921568627 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_out_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_out_left"
+    type="fixed">
+    <origin
+      xyz="-0.048999 0.0079 0.0235"
+      rpy="-1.5708 0 3.1416" />
+    <parent
+      link="hip_in_left" />
+    <child
+      link="hip_out_left" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="hip_left">
+    <inertial>
+      <origin
+        xyz="0.015066424237247 0.00245230826869304 -0.0407737121184163"
+        rpy="0 0 0" />
+      <mass
+        value="0.173358643056326" />
+      <inertia
+        ixx="0.000198570341956392"
+        ixy="-3.18164988681971E-06"
+        ixz="5.4502750345141E-06"
+        iyy="0.00019770104242584"
+        iyz="2.18630463384963E-05"
+        izz="9.77084085096509E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_left"
+    type="revolute">
+    <origin
+      xyz="0 0.0336 -0.0128"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="hip_out_left" />
+    <child
+      link="hip_left" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="knee_left">
+    <inertial>
+      <origin
+        xyz="0.0603311385459453 -0.0142353195423451 0.0031207209471778"
+        rpy="0 0 0" />
+      <mass
+        value="0.193749175828595" />
+      <inertia
+        ixx="9.08157588197075E-05"
+        ixy="-1.2713882459533E-06"
+        ixz="2.13503913258335E-05"
+        iyy="0.00046325565465391"
+        iyz="2.59804714671455E-09"
+        izz="0.000467424660949944" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/knee_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.149019607843137 0.149019607843137 0.149019607843137 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/knee_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="knee_left"
+    type="revolute">
+    <origin
+      xyz="0.0064248 0.01014 -0.17899"
+      rpy="3.1416 1.5523 0" />
+    <parent
+      link="hip_left" />
+    <child
+      link="knee_left" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="foot_knee">
+    <inertial>
+      <origin
+        xyz="0.000345183578153316 0.030992774763907 0.00299677287464134"
+        rpy="0 0 0" />
+      <mass
+        value="0.109810906126055" />
+      <inertia
+        ixx="9.45018909341155E-05"
+        ixy="3.77307452887424E-07"
+        ixz="-2.41881348566708E-06"
+        iyy="9.87830350678301E-05"
+        iyz="6.61326707220095E-06"
+        izz="3.61463551507089E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/foot_knee.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/foot_knee.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="foot_knee"
+    type="revolute">
+    <origin
+      xyz="0.30077 -0.014162 0.010907"
+      rpy="-0.01851 0 1.5708" />
+    <parent
+      link="knee_left" />
+    <child
+      link="foot_knee" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="hip_in_right">
+    <inertial>
+      <origin
+        xyz="0.00338528070461721 0.0151122861864951 0.00041843483331"
+        rpy="0 0 0" />
+      <mass
+        value="0.0712276193921833" />
+      <inertia
+        ixx="2.06860514118118E-05"
+        ixy="2.48368670797181E-08"
+        ixz="-1.07290092510045E-06"
+        iyy="1.62453328491454E-05"
+        iyz="1.87065420918867E-07"
+        izz="1.37712539600986E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_in_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.309803921568627 0.309803921568627 0.309803921568627 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_in_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_in_right"
+    type="revolute">
+    <origin
+      xyz="-0.018 -0.05515 -0.015"
+      rpy="1.5708 0 3.1416" />
+    <parent
+      link="front_pelvic" />
+    <child
+      link="hip_in_right" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="hip_out_right">
+    <inertial>
+      <origin
+        xyz="-1.55231435722269E-06 0.0156156143088451 4.19839761384433E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.0601134487354299" />
+      <inertia
+        ixx="1.42260371046796E-05"
+        ixy="1.32391526082365E-09"
+        ixz="-1.76551764873391E-10"
+        iyy="1.22317140399298E-05"
+        iyz="2.16336574231391E-07"
+        izz="7.31878050775228E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_out_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.309803921568627 0.309803921568627 0.309803921568627 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_out_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_out_right"
+    type="revolute">
+    <origin
+      xyz="0.048999 0.0079 0.0235"
+      rpy="-1.5708 0 3.1416" />
+    <parent
+      link="hip_in_right" />
+    <child
+      link="hip_out_right" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="hip_right">
+    <inertial>
+      <origin
+        xyz="-0.0180050889912752 -0.0163714768389116 -0.0175287303019438"
+        rpy="0 0 0" />
+      <mass
+        value="0.169857212011871" />
+      <inertia
+        ixx="0.000188110643403797"
+        ixy="3.85860343413538E-06"
+        ixz="1.15765504173472E-05"
+        iyy="0.000183631973138084"
+        iyz="-2.0862351413971E-05"
+        izz="9.36669622823916E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.149019607843137 0.149019607843137 0.149019607843137 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/hip_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_right"
+    type="revolute">
+    <origin
+      xyz="-0.0142 0.0546 0.021079"
+      rpy="1.5708 -1.5708 0" />
+    <parent
+      link="hip_out_right" />
+    <child
+      link="hip_right" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="knee_right">
+    <inertial>
+      <origin
+        xyz="0.0603311425354171 -0.0142651764512699 -0.00312072595890059"
+        rpy="0 0 0" />
+      <mass
+        value="0.193749081673122" />
+      <inertia
+        ixx="9.08156817206835E-05"
+        ixy="-8.98456434572525E-07"
+        ixz="-2.13501405570538E-05"
+        iyy="0.000463254874022261"
+        iyz="2.59492751223274E-09"
+        izz="0.000467423947115582" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/knee_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.149019607843137 0.149019607843137 0.149019607843137 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/knee_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="knee_right"
+    type="revolute">
+    <origin
+      xyz="-0.027454 -0.02434 -0.15799"
+      rpy="0 1.5523 0" />
+    <parent
+      link="hip_right" />
+    <child
+      link="knee_right" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="foot_right">
+    <inertial>
+      <origin
+        xyz="-0.00888973437662503 0.0154484248602611 -0.0168029051934728"
+        rpy="0 0 0" />
+      <mass
+        value="0.109790136959187" />
+      <inertia
+        ixx="3.61479577922108E-05"
+        ixy="2.41989912733938E-06"
+        ixz="-6.61282025215304E-06"
+        iyy="9.45217365654881E-05"
+        iyz="3.78800086158151E-07"
+        izz="9.87969888475149E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/foot_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.309803921568627 0.309803921568627 0.309803921568627 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://FinleyJNEWARMS_2024_straight_4/meshes/foot_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="foot_right"
+    type="revolute">
+    <origin
+      xyz="0.25309 -0.029938 -0.0041228"
+      rpy="0 -1.5523 0" />
+    <parent
+      link="knee_right" />
+    <child
+      link="foot_right" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>
