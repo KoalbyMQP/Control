@@ -86,7 +86,7 @@
   </link>
   <joint
     name="neckturn"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 -0.0453 0.0831"
       rpy="1.5707963267949 0 0" />
@@ -139,7 +139,7 @@
   </link>
   <joint
     name="headnod"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 0.02 0"
       rpy="3.1416 -1.5708 0" />
@@ -192,7 +192,7 @@
   </link>
   <joint
     name="shoulderspin_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0.0921 -0.051 0.033"
       rpy="-1.5708 0 -1.5708" />
@@ -245,7 +245,7 @@
   </link>
   <joint
     name="biceplift_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 0 0.062476610561002"
       rpy="1.5707963267949 0 3.14159265358979" />
@@ -298,7 +298,7 @@
   </link>
   <joint
     name="elbow_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0.003175 0.1033 0"
       rpy="0 -1.5708 3.1416" />
@@ -351,7 +351,7 @@
   </link>
   <joint
     name="wristspin_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="-0.00240000000000003 -0.0787000000000003 -0.0127999999982001"
       rpy="3.14159265358979 0 3.14159265358979" />
@@ -404,7 +404,7 @@
   </link>
   <joint
     name="handcurl_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 -0.0428000000000002 0.000124999999999396"
       rpy="3.13301245342782 -1.57079232717222 -0.00858020528131218" />
@@ -457,7 +457,7 @@
   </link>
   <joint
     name="gripper_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="-0.00012499975293525 0.117035130167948 -0.0030731306896986"
       rpy="1.57056328390166 -1.55363592088544 -1.57056324958431" />
@@ -510,7 +510,7 @@
   </link>
   <joint
     name="shoulderspin_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="-0.0921 -0.051 0.033"
       rpy="1.5708 0 1.5708" />
@@ -563,7 +563,7 @@
   </link>
   <joint
     name="biceplift_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 0 -0.0624766105610017"
       rpy="-1.57079632679489 0 3.14159265358979" />
@@ -616,7 +616,7 @@
   </link>
   <joint
     name="elbow_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0.003175 0.1033 0"
       rpy="0 -1.5708 3.14159" />
@@ -669,7 +669,7 @@
   </link>
   <joint
     name="wristspin_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="-0.00239999999999981 -0.0786999999999978 -0.0127999999982005"
       rpy="3.14159265358979 0 3.14159265358977" />
@@ -722,7 +722,7 @@
   </link>
   <joint
     name="handcurl_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 -0.0428000000000013 0.000125000000006953"
       rpy="3.13301245516304 -1.57079232717222 -0.00858020701652515" />
@@ -775,7 +775,7 @@
   </link>
   <joint
     name="gripper_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="-0.000124999752942737 0.117035130167948 -0.00307313068969156"
       rpy="1.57056324958429 -1.55363592088546 -1.57056324958431" />
@@ -828,7 +828,7 @@
   </link>
   <joint
     name="chestturn"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 -0.049950000195054 -0.0402"
       rpy="1.5707963267949 0 0.00319374778567617" />
@@ -881,7 +881,7 @@
   </link>
   <joint
     name="waistlean"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="1.21362209539193E-05 -0.125447500859276 -0.00379998061996927"
       rpy="0 0 0" />
@@ -934,7 +934,7 @@
   </link>
   <joint
     name="abdominalcrunch"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 0 0"
       rpy="4.41399543709926E-05 0 0" />
@@ -987,7 +987,7 @@
   </link>
   <joint
     name="hiplift_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0.019122224555896 -0.092473099962267 0.000141587585576669"
       rpy="0 0 0" />
@@ -1040,7 +1040,7 @@
   </link>
   <joint
     name="hiprotate_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0.0529429001442858 -0.000729806779775743 0.00261072658997315"
       rpy="-0.253588773784534 1.56749146050578 -0.267412246753153" />
@@ -1093,7 +1093,7 @@
   </link>
   <joint
     name="thighlift_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0.000500000000000063 -0.0327999999999748 0"
       rpy="0 -1.57079059652822 0.000829123459538498" />
@@ -1146,7 +1146,7 @@
   </link>
   <joint
     name="knee_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 -0.188399801770421 0"
       rpy="0.00691110859723705 1.5707905963926 0.00691110859735401" />
@@ -1199,7 +1199,7 @@
   </link>
   <joint
     name="ankle_left"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 -0.221800000000001 0"
       rpy="3.1415926133912 1.57079059652822 3.14159261339088" />
@@ -1252,7 +1252,7 @@
   </link>
   <joint
     name="hiplift_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="-0.022873549166337 -0.0918925828429866 0"
       rpy="0 0 0" />
@@ -1305,7 +1305,7 @@
   </link>
   <joint
     name="hiprotate_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="-0.0529584381884904 0.000734070667063103 0.00227236102342254"
       rpy="-0.253588773784397 1.56749146050571 -0.267412246752986" />
@@ -1358,7 +1358,7 @@
   </link>
   <joint
     name="thighlift_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0.000499999999999813 -0.032800000000001 0"
       rpy="0 0 0.000829164875814153" />
@@ -1411,7 +1411,7 @@
   </link>
   <joint
     name="knee_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 -0.188399801770423 0"
       rpy="0 0 0" />
@@ -1464,7 +1464,7 @@
   </link>
   <joint
     name="ankle_right"
-    type="continuous">
+    type="revolute">
     <origin
       xyz="0 -0.221800000000001 0"
       rpy="0 -1.57079059652822 0" />
