@@ -243,5 +243,3 @@ ik_solution_2, traj4 = execute_trajectory(
     duration=5,
     threshold=4
 )
-
-
