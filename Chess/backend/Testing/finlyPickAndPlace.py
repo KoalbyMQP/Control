@@ -243,3 +243,150 @@ ik_solution_2, traj4 = execute_trajectory(
     duration=5,
     threshold=4
 )
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+# Code to plot out workspace
+ 
+
+# # Put this near the top with your imports
+# import numpy as np
+# from mpl_toolkits.mplot3d import Axes3D
+# from ikpy.chain import Chain
+# from tqdm import tqdm 
+# import matplotlib.pyplot as plt
+
+# def sample_joint_space(n_samples, joint_limits):
+#     """
+#     n_samples: int
+#     joint_limits: list of (min, max) for each joint (excluding the fixed root element)
+#     returns: array (n_samples, n_joints)
+#     """
+#     n_joints = len(joint_limits)
+#     samples = np.random.rand(n_samples, n_joints)
+#     for j in range(n_joints):
+#         lo, hi = joint_limits[j]
+#         samples[:, j] = lo + samples[:, j] * (hi - lo)
+#     return samples
+
+# def fk_positions_for_samples(chain: Chain, samples):
+#     """
+#     chain: ikpy.Chain for the arm (with same order of moving joints as samples)
+#     samples: (N, n_joints) numpy
+#     returns: (N,3) end-effector positions in chain base frame
+#     """
+#     points = []
+#     for q in samples:
+#         # ikpy expects a full vector with first element = 0 (dummy) if URDF includes root
+#         # Many Chains include a fixed element; adapt as needed. Here we try directly.
+#         try:
+#             T = chain.forward_kinematics(q)
+#         except Exception:
+#             # If chain expects full vector with extra leading 0:
+#             padded = np.concatenate(([0.0], q))
+#             T = chain.forward_kinematics(padded)
+#         pos = T[:3, 3]
+#         points.append(pos)
+#     return np.array(points)
+
+# # --- cheap sphere-approx self collision ---
+# def build_body_spheres(chain: Chain, radii_by_link=None):
+#     """
+#     Build sphere approximations centered at link frames (link origins).
+#     radii_by_link: dict mapping link_name -> radius (meters). If None, use a small default or
+#                    infer from URDF visuals manually.
+#     returns list of (link_frame_index, center_func, radius) where center_func(q) gives center.
+#     """
+#     centers_idx = []
+#     # We will use forward_kinematics of each link frame.
+#     link_names = [j.name for j in chain.links]
+#     # Provide default radii if not provided:
+#     if radii_by_link is None:
+#         radii_by_link = {name: 0.07 for name in link_names}  # tweak per robot
+#     # prepare functions to compute center position for each link index
+#     for idx, link in enumerate(chain.links):
+#         def center_fn(q, idx_local=idx):
+#             # compute FK up to link idx_local
+#             # ikpy doesn't expose per-link FK easily, but chain.links[...] has frames
+#             # We'll do full FK and extract transformation of the link's frame if available.
+#             T = chain.forward_kinematics(q, full_kinematics=True)
+#             # full_kinematics returns list of transforms for each frame
+#             # try to use that; else fallback to whole transform
+#             if isinstance(T, (list, tuple)) and len(T) > idx_local:
+#                 tlink = T[idx_local]
+#                 return tlink[:3, 3]
+#             else:
+#                 return chain.forward_kinematics(q)[:3, 3]
+#         centers_idx.append((link.name, center_fn, radii_by_link.get(link.name, 0.07)))
+#     return centers_idx
+
+# def is_self_collision(q, sphere_list, min_clearance=0.02):
+#     """
+#     sphere_list: list of (name, center_fn, radius)
+#     returns True if any pair of spheres overlap (collision) or are too close
+#     """
+#     centers = [fn(q) for (_n, fn, r) in sphere_list]
+#     radii = [r for (_n, _fn, r) in sphere_list]
+#     centers = np.array(centers)
+#     for i in range(len(centers)):
+#         for j in range(i + 1, len(centers)):
+#             d = np.linalg.norm(centers[i] - centers[j])
+#             if d < (radii[i] + radii[j] + min_clearance):
+#                 return True
+#     return False
+
+# # --- voxelize and plot ---
+# def voxelize_points(points, voxel_size=0.02, grid_margin=0.2):
+#     mins = points.min(axis=0) - grid_margin
+#     maxs = points.max(axis=0) + grid_margin
+#     dims = np.ceil((maxs - mins) / voxel_size).astype(int)
+#     # convert points to voxel indices
+#     idxs = np.floor((points - mins) / voxel_size).astype(int)
+#     occupancy = {}
+#     for ix, iy, iz in idxs:
+#         occupancy[(ix, iy, iz)] = occupancy.get((ix, iy, iz), 0) + 1
+#     voxels = np.array(list(occupancy.keys()))
+#     counts = np.array(list(occupancy.values()))
+#     # convert back to centers
+#     centers = mins + (voxels + 0.5) * voxel_size
+#     return centers, counts
+
+# def plot_point_cloud(points, s=2):
+#     fig = plt.figure(figsize=(8,8))
+#     ax = fig.add_subplot(111, projection='3d')
+#     ax.scatter(points[:,0], points[:,1], points[:,2], s=s)
+#     ax.set_xlabel('Z'); ax.set_ylabel('Y'); ax.set_zlabel('X')
+#     plt.show()
+
+# left_arm_chain = Chain.from_urdf_file(
+#     "backend/Testing/FinleyJNEWARMS_2024_straight_4.urdf",
+#     base_elements=['shoulder1_left', 'shoulder1_left'],
+#     active_links_mask=[False, True, True, True, True, True, True]  
+# )
+
+
+# # Determine joint limits: you should get these from your URDF or robot config.
+# # For demo, assume 7 dof from joint 1..6 (adjust count to your Chain).
+# # Format: [(min, max), ...] in radians
+# joint_limits = [(-2.8, 2.8), (-1.5, 1.5), (-2.8, 2.8), (-2.0, 2.0), (-2.5, 2.5), (-3.0, 3.0)]
+
+# N = 8000
+# samples = sample_joint_space(N, joint_limits)
+
+# # Optionally filter by self-collision using the sphere approximation:
+# valid_points = []
+# for q in tqdm(samples):
+#     # just collect positions
+#     pos = left_arm_chain.forward_kinematics(np.concatenate(([0.0], q)))[:3,3]
+#     valid_points.append(pos)
+# valid_points = np.array(valid_points)
+# print("Valid reachable points:", valid_points.shape[0])
+
+
+# # Make voxel occupancy for visualization
+# centers, counts = voxelize_points(valid_points, voxel_size=0.02)
+# plot_point_cloud(centers)
