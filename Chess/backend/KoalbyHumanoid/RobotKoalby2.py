@@ -209,7 +209,7 @@ class Robot2():
 
     def updateRightArmCoM(self):
         motorList = [self.motors[0], self.motors[1], self.motors[2], self.motors[3], self.motors[4], self.motors[5]]
-        linkList = [self.links[0], self.links[1], self.links[2], self.links[3], self.links[4], self.motors[5]]
+        linkList = [self.links[0], self.links[1], self.links[2], self.links[3], self.links[4], self.links[5]]
         return poe.calcLimbCoM(motorList, linkList)
     
     def updateLeftArmCoM(self):
