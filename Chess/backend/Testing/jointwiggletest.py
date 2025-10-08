@@ -11,8 +11,8 @@ from backend.KoalbyHumanoid.trajPlannerTime import TrajPlannerTime
 
 # --- Configuration ---
 IS_REAL_ROBOT = False 
-TEST_ANGLE_DEG = 20  # The angle (in degrees) to move the motor
-TEST_ANGLE_RAD = math.radians(TEST_ANGLE_DEG)
+#TEST_ANGLE_DEG = 20  # The angle (in degrees) to move the motor
+#TEST_ANGLE_RAD = math.radians(TEST_ANGLE_DEG)
 
 # --- Connect to Robot ---
 # This initializes your entire Robot2 class in simulation mode
@@ -40,6 +40,11 @@ try:
             if motor_to_test is None:
                 print(f"--- Error: Motor ID {motor_id} could not be found in the robot.motors list. ---")
                 continue
+
+            # Ask for desired angle input
+            angle_input = input("Enter desired angle in degrees (e.g., 20): ")
+            TEST_ANGLE_DEG = float(angle_input)
+            TEST_ANGLE_RAD = math.radians(TEST_ANGLE_DEG)
 
             print(f"Testing Motor ID {motor_id}...")
 
