@@ -1,4 +1,3 @@
-
 import adafruit_bno055
 import numpy as np
 import math
@@ -10,11 +9,20 @@ except NotImplementedError:
     print("Failed to import board when not running on Raspberry Pi")
 
 class IMU():
-    def __init__(self, isReal, sim=None):
+    def __init__(self, isReal, sim=None, imu_name="RightFoot"):
+        """
+        Initialize the IMU.
+
+        Parameters:
+        - isReal: Boolean indicating if the IMU is real or simulated.
+        - sim: The simulation client for accessing simulation signals.
+        - imu_name: The name of the IMU (e.g., "RightFoot", "LeftFoot") to differentiate multiple IMUs in simulation.
+        """
         self.isReal = isReal
         self.isConnected = True
         self.sim = sim
-        
+        self.imu_name = imu_name  # Name for identifying multiple IMUs in simulation
+
         if isReal:
             try:
                 i2c = board.I2C()  # uses board.SCL and board.SDA
@@ -23,8 +31,6 @@ class IMU():
                 print("No IMU detected, disabling IMU")
                 self.isConnected = False
 
-            # self.zero() # angles/accelerations that correspond to home position
-    
     def zero(self):
         if self.isReal:
             self.zeroAngles = self.getDataRaw()
@@ -40,26 +46,56 @@ class IMU():
         if not self.isConnected:
             return [0, 0, 0, 0, 0, 0]
         if self.isReal:
-            # in terms of right hand rule convention for positive directions:
-            # sensor.euler returns: (yaw (opposite convention), roll (normal convention), pitch (opposite convention))
-            # yaw is in range 0 to 360, roll is -90 to 90 (rolling the IMU 180 degrees results in the same roll reading), pitch is -180 to 180
-            # sensor.acceleration returns: (x acceleration (normal convention), z acceleration (opposite convention), y acceleration (normal convention))
+            # In terms of right-hand rule convention for positive directions:
+            # sensor.euler returns: (yaw (opposite convention), roll (normal convention), pitch (opposite convention)
+            # yaw is in range 0 to 360, roll is -90 to 90, pitch is -180 to 180
             yaw, roll, pitch = self.sensor.euler
             
             self.data = [ 
                 math.radians(-pitch),
-                math.radians(-(yaw if yaw <= 180 else yaw - 360)), # mapping from 0 to 360 to -180 to 180
+                math.radians(-(yaw if yaw <= 180 else yaw - 360)),  # Mapping from 0 to 360 to -180 to 180
                 math.radians(roll),
                 self.sensor.acceleration[0],
                 -self.sensor.acceleration[2],
                 self.sensor.acceleration[1]
-                ]
+            ]
+        elif self.sim:
+            # Different signal names for each IMU based on imu_name
+            prefix = f"imu{self.imu_name}"
+            self.data = [
+                self.sim.getFloatSignal(f"{prefix}_gyroX"),
+                self.sim.getFloatSignal(f"{prefix}_gyroY"),
+                self.sim.getFloatSignal(f"{prefix}_gyroZ"),
+                self.sim.getFloatSignal(f"{prefix}_accelX"),
+                self.sim.getFloatSignal(f"{prefix}_accelY"),
+                self.sim.getFloatSignal(f"{prefix}_accelZ")
+            ]
+            # Handle cases where signals may not be available (default to 0 if no data)
+            self.data = [0 if dataPoint is None else dataPoint for dataPoint in self.data]
         else:
-            self.data = [self.sim.getFloatSignal("gyroX"),
-            self.sim.getFloatSignal("gyroY"),
-            self.sim.getFloatSignal("gyroZ"),
-            self.sim.getFloatSignal("accelX"),
-            self.sim.getFloatSignal("accelY"),
-            self.sim.getFloatSignal("accelZ")]
-            self.data = [0 if dataPoint==None else dataPoint for dataPoint in self.data]
+            self.data = [0, 0, 0, 0, 0, 0]  # Fallback if sim is not set in simulation mode
         return self.data
+
+class IMUManager():
+    def __init__(self, isReal, sim=None):
+        """
+        Initialize the IMU manager for handling multiple IMUs.
+        
+        Parameters:
+        - isReal: Boolean indicating if the IMUs are real or simulated.
+        - sim: The simulation client for accessing simulation signals.
+        """
+        self.isReal = isReal
+        self.sim = sim
+        self.imu_names = ["RightFoot", "LeftFoot", "CenterOfMass", "Torso", "RightChest", "LeftChest"]
+        self.imus = {name: IMU(isReal, sim, name) for name in self.imu_names}
+
+    def getAllIMUData(self):
+        """
+        Retrieve data for all IMUs.
+        
+        Returns:
+        - A dictionary where keys are IMU names and values are the IMU data.
+        """
+        imu_data = {name: self.imus[name].getData() for name in self.imu_names}
+        return imu_data
