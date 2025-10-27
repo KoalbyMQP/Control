@@ -20,6 +20,7 @@ class Motor():
             self.arduino_serial = serial
         else:
             self.pidGains = pidGains
+            self.angle_limit = angle_limit #added angle limits into sim
             self.sim = sim
             self.handle = handle
             self.simMovePID = PID(self.pidGains[0], self.pidGains[1], self.pidGains[2])

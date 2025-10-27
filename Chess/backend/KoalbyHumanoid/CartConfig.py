@@ -5,6 +5,6 @@ barebones config of swapping station lift stuff, similar to config.Made with int
 from enum import Enum
 
 class Motors(Enum):
-    Lift_Screw = 30 #arbitrarily larger than other motor id's
+    Lift_Screw = 50 #arbitrarily larger than other motor id's
     
     
