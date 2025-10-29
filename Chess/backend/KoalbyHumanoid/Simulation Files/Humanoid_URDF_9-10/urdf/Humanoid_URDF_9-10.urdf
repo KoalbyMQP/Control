@@ -202,6 +202,9 @@
       link="shoulder_left" />
     <axis
       xyz="0 0 1" />
+    <limit 
+    lower="-1.5708" 
+    upper="1.5708" />
   </joint>
   <link
     name="bicep_left">
@@ -255,6 +258,9 @@
       link="bicep_left" />
     <axis
       xyz="1 0 0" />
+    <limit 
+      lower="-1.22173" 
+      upper="1.5708" />
   </joint>
   <link
     name="forearm_left">
@@ -308,6 +314,9 @@
       link="forearm_left" />
     <axis
       xyz="1 0 0" />
+    <limit 
+      lower="-1.74533" 
+      upper="1.74533" />
   </joint>
   <link
     name="wrist_left">
@@ -361,6 +370,9 @@
       link="wrist_left" />
     <axis
       xyz="0 1 0" />
+    <limit 
+    lower="-1.5708" 
+    upper="1.5708" />
   </joint>
   <link
     name="hand_left">
@@ -413,7 +425,10 @@
     <child
       link="hand_left" />
     <axis
-      xyz="0 0.0171595632243 -0.999852763847735" />
+      xyz="0 0.0171595632243 -0.999852763847735" />\
+    <limit 
+    lower="-2.00713" 
+    upper="2.00713" />
   </joint>
   <link
     name="gripper_left">
@@ -467,6 +482,9 @@
       link="gripper_left" />
     <axis
       xyz="0 0 0.999999999992002" />
+    <limit 
+    lower="0" 
+    upper="0.698132" />
   </joint>
   <link
     name="shoulder_right">
@@ -520,6 +538,9 @@
       link="shoulder_right" />
     <axis
       xyz="0 0 1" />
+    <limit 
+    lower="-1.5708" 
+    upper="1.5708" />
   </joint>
   <link
     name="bicep_right">
@@ -573,6 +594,9 @@
       link="bicep_right" />
     <axis
       xyz="1 0 0" />
+    <limit 
+      lower="-1.22173" 
+      upper="1.5708" />      
   </joint>
   <link
     name="forearm_right">
@@ -679,6 +703,9 @@
       link="wrist_right" />
     <axis
       xyz="0 1 0" />
+    <limit 
+    lower="-1.5708" 
+    upper="1.5708" />
   </joint>
   <link
     name="hand_right">
@@ -732,6 +759,9 @@
       link="hand_right" />
     <axis
       xyz="0 0.0171595632242928 -0.999852763847735" />
+    <limit 
+    lower="-2.00713" 
+    upper="2.00713" />    
   </joint>
   <link
     name="gripper_right">
@@ -785,6 +815,9 @@
       link="gripper_right" />
     <axis
       xyz="0 0 0.999999999992001" />
+    <limit 
+    lower="0" 
+    upper="0.698132" />
   </joint>
   <link
     name="waist">

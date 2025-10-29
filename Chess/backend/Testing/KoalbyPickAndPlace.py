@@ -80,7 +80,7 @@ print(C)
 
 end_effector_start_pos = [.49076,  -.08197, .76541]
 # end_effector_start_pos = [0.1151, -0.08197, 0.39374]
-end_position = [0.128, -0.200, 0.615]
+end_position = [0.15, -0.35, 0.5]
 end_effector_z_offset = 0.1
 end_effector_y_offset = 0.0
 end_effector_x_offset = 0.007
@@ -183,7 +183,7 @@ while time.time() - startTime < 5:
         robot.motors[8].target = (motor_angle_task[4], 'P')
         robot.motors[9].target = (motor_angle_task[5], 'P')
         
-        print(motor_angle_task)
+        # print(motor_angle_task)
 
         # robot.IMUBalance(0, 0)
         robot.moveAllToTarget()
@@ -222,7 +222,7 @@ while time.time() - startTime < 5:
         robot.motors[8].target = (motor_angle_task[4], 'P')
         robot.motors[9].target = (motor_angle_task[5], 'P')
         
-        print(motor_angle_task)
+        # print(motor_angle_task)
 
         # robot.IMUBalance(0, 0)
         robot.moveAllToTarget()
@@ -261,7 +261,7 @@ while time.time() - startTime < 20:
         robot.motors[8].target = (motor_angle_task[4], 'P')
         robot.motors[9].target = (motor_angle_task[5], 'P')
         
-        print(motor_angle_task)
+        # print(motor_angle_task)
 
         # robot.IMUBalance(0, 0)
         robot.moveAllToTarget()
