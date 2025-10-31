@@ -618,11 +618,11 @@
       link="shoulder1_right" />
     <axis
       xyz="0 1 0" />
-    <limit
+    <!-- <limit
       lower="0"
       upper="0"
       effort="0"
-      velocity="0" />
+      velocity="0" /> -->
   </joint>
   <link
     name="shoulder2_right">
@@ -676,11 +676,11 @@
       link="shoulder2_right" />
     <axis
       xyz="0 0 1" />
-    <limit
+    <!-- <limit
       lower="0"
       upper="0"
       effort="0"
-      velocity="0" />
+      velocity="0" /> -->
   </joint>
   <link
     name="elbow_right">
@@ -734,11 +734,11 @@
       link="elbow_right" />
     <axis
       xyz="1 0 0" />
-    <limit
+    <!-- <limit
       lower="0"
       upper="0"
       effort="0"
-      velocity="0" />
+      velocity="0" /> -->
   </joint>
   <link
     name="forearm_right">
@@ -792,11 +792,11 @@
       link="forearm_right" />
     <axis
       xyz="0.99997 0 0.007092" />
-    <limit
+    <!-- <limit
       lower="0"
       upper="0"
       effort="0"
-      velocity="0" />
+      velocity="0" /> -->
   </joint>
   <link
     name="wrist_right">
@@ -850,11 +850,11 @@
       link="wrist_right" />
     <axis
       xyz="0.0070945 -0.017304 0.99983" />
-    <limit
+    <!-- <limit
       lower="0"
       upper="0"
       effort="0"
-      velocity="0" />
+      velocity="0" /> -->
   </joint>
   <link
     name="hand_right">
@@ -908,11 +908,11 @@
       link="hand_right" />
     <axis
       xyz="0.00075399 0.017304 -0.99985" />
-    <limit
+    <!-- <limit
       lower="0"
       upper="0"
       effort="0"
-      velocity="0" />
+      velocity="0" /> -->
   </joint>
   <link
     name="back">

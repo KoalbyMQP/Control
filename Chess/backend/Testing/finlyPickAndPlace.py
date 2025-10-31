@@ -9,6 +9,11 @@ from backend.KoalbyHumanoid.trajPlannerTime import TrajPlannerTime
 # from backend.Testing import finlyViaPoints as via
 
 
+right_arm_chain = Chain.from_urdf_file(
+    "backend/Testing/FinleyJNEWARMS_2024_straight_4.urdf",
+    base_elements=['shoulder1_right', 'shoulder1_right'],
+    active_links_mask=[False, True, True, True, True, True, True]  
+)
 
 # Creating URDF chain for left arm 
 left_arm_chain = Chain.from_urdf_file(
@@ -22,6 +27,10 @@ camera = Chain.from_urdf_file(
     "backend/Testing/FinleyJNEWARMS_2024_straight_4.urdf",
     base_elements=['neck', 'neck']   
 )
+
+INITIAL_ARM_ANGLES = np.array([0.0] * 7)
+left_arm_angles = INITIAL_ARM_ANGLES.copy()
+right_arm_angles = INITIAL_ARM_ANGLES.copy()
 
 #forward kinematics for camera chain
 camera_angles=np.array([0,0,0,0])
@@ -39,6 +48,8 @@ print("Setup Complete")
 
 final_position=np.array([0,  0, 0])
 
+start_to_finish_time = time.time()
+init_start = time.time()
 
 
 #Starting Agnles
@@ -54,6 +65,12 @@ robot.motors[8].target = (math.radians(0), 'P') #Forearm joint - 180 to -180 sho
 robot.motors[9].target = (math.radians(0), 'P') #Wrist joint - 90 works, but we don't need it to bend in that angle, -130 is maximum
 robot.motors[10].target = (math.radians(0), 'P') #nothing? will just do -180 to 180
 
+robot.motors[0].target = (math.radians(0), 'P') #shoulder 1 koint - -180 to 180
+robot.motors[1].target = (math.radians(0), 'P') #shoulder 2 joint - 85 sends it down to legs, -90 sends arm above head
+robot.motors[2].target = (math.radians(0), 'P') #Elbow joint - 110 moves towards board, may have overlap with link, -110 works
+robot.motors[3].target = (math.radians(0), 'P') #Forearm joint - 180 to -180 should work
+robot.motors[4].target = (math.radians(0), 'P') #Wrist joint - 90 works, but we don't need it to bend in that angle, -130 is maximum
+robot.motors[11].target = (math.radians(0), 'P') #nothing? will just do -180 to 180
 
 
 ik_solution_2=np.array([0,0,0,0,0,0,0])
@@ -67,6 +84,11 @@ while time.time() - simStartTime < 2:
     robot.IMUBalance(0,0)
     robot.moveAllToTarget()
 
+init_time = time.time() - init_start
+print(f"Initialize time: {init_time:.6f} seconds")
+
+entities_start = time.time()
+
 
 # conversion of final points from camera coordinate systm to rorbot coordinate system 
 final_points=np.array([0, 0, 0])
@@ -74,6 +96,7 @@ B=np.array([[final_points[0]],[final_points[1]],[final_points[2]],[1]])
 A= camera_frame_transformation
 final_points=np.array([0,0, 0])
 C = np.dot(A, B)
+
 
 # print(C)
 
@@ -98,6 +121,8 @@ final_position=left_arm_chain.forward_kinematics(ik_solution_2)
 
 lArm_tj_joint = TrajPlannerTime(leftArmTraj[0], leftArmTraj[1], leftArmTraj[2], leftArmTraj[3])
 
+sim_run_start = time.time()
+
 def within_threshold(p1, p2, threshold):
     p1 = np.asarray(p1).reshape(-1)
     p2 = np.asarray(p2).reshape(-1)
@@ -112,14 +137,14 @@ target_orientation = np.array([0.0, -1.0, 1.0])
 
 JOINT_LIMITS = {
     5: (np.deg2rad(-180), np.deg2rad(180)),
-    6: (np.deg2rad(-90), np.deg2rad(100)), 
+    6: (np.deg2rad(-90), np.deg2rad(130)), #100
     7: (np.deg2rad(-110), np.deg2rad(110)),  
     8: (np.deg2rad(-180), np.deg2rad(180)),
     9: (np.deg2rad(-130), np.deg2rad(90))
 }
 
 def execute_trajectory(chain, robot, ik_init, target_orientation,
-                       start_pos, end_pos, duration, threshold=None, safety_margin=0.01):
+                       start_pos, end_pos, duration, motor_ids, threshold=None, safety_margin=0.01):
     # Define the trajectory
     leftArmTraj = [
         [[0, 0, 0], [duration, duration, duration]],  # timing vector
@@ -183,11 +208,14 @@ def execute_trajectory(chain, robot, ik_init, target_orientation,
         trajectory_buffer.append(ik_solution)
 
         # Send to motors
-        for idx, motor_id in enumerate(range(5, 10), start=1):
-            robot.motors[motor_id].target = (ik_solution[idx], 'P')
+        for idx, motor_id in enumerate(motor_ids, start=1):
+            if idx < len(ik_solution):
+                robot.motors[motor_id].target = (ik_solution[idx], 'P')
+            else:
+                print(f"Warning: Motor ID {motor_id} has no corresponding IK solution index.")
 
         robot.moveAllToTarget()
-        total_time = time.time() - start_time
+        # total_time = time.time() - start_time
         # print(f"\n--- Trajectory Stats ---")
         # print(f"Waypoints generated: {waypoint_count}")
         # print(f"IK recalculations:   {ik_recalc_count}")
@@ -196,197 +224,223 @@ def execute_trajectory(chain, robot, ik_init, target_orientation,
         # print(f"Avg IK per waypoint: {ik_time_total / waypoint_count:.6f} s\n")
     return ik_solution_2, trajectory_buffer
 
+MOTOR_ID_MAP = {
+    "left": [5, 6, 7, 8, 9, 10], 
+    "right": [0, 1, 2, 3, 4, 10]
+}
 
-ik_solution_2, traj1 = execute_trajectory(
+target_position_world = np.array([-0.095, -0.460, 0.76541])
+
+left_fk_matrices = left_arm_chain.forward_kinematics(INITIAL_ARM_ANGLES, full_kinematics=True)
+print(left_fk_matrices)
+left_shoulder_pos = left_fk_matrices[0][:3, 3] # Position of the base link
+
+right_fk_matrices = right_arm_chain.forward_kinematics(INITIAL_ARM_ANGLES, full_kinematics=True)
+right_shoulder_pos = right_fk_matrices[0][:3, 3]
+
+print(f"Target: {target_position_world}")
+print(f"Left shoulder: {left_shoulder_pos}")
+print(f"Right shoulder: {right_shoulder_pos}")
+
+
+dist_left = np.linalg.norm(target_position_world - left_shoulder_pos)
+dist_right = np.linalg.norm(target_position_world - right_shoulder_pos)
+
+print(f"Distance to left: {dist_left:.3f}, Distance to right: {dist_right:.3f}")
+
+if dist_left <= dist_right:
+    print("Target is closer to LEFT arm. Moving left arm.")
+    chosen_chain = left_arm_chain
+    chosen_motor_ids = MOTOR_ID_MAP["left"]
+    current_arm_angles = left_arm_angles
+else:
+    print("Target is closer to RIGHT arm. Moving right arm.")
+    chosen_chain = right_arm_chain
+    chosen_motor_ids = MOTOR_ID_MAP["right"]
+    current_arm_angles = right_arm_angles
+
+new_arm_angles, traj1 = execute_trajectory(
     left_arm_chain,
     robot,
     ik_solution_2,
     target_orientation,
     start_pos=end_effector_start_pos,
-    end_pos=end_position,
-    duration=10,
-    threshold=4
-)
-
-pick_up_position = [end_position[0], end_position[1], end_position[2]-(end_effector_z_offset/2)]
-end_board_position = [end_position[0], end_position[1]+0.1, end_position[2]]
-
-ik_solution_2, traj2 = execute_trajectory(
-    left_arm_chain,
-    robot,
-    ik_solution_2,
-    target_orientation,
-    start_pos=end_position,
-    end_pos=pick_up_position,
+    end_pos=target_position_world,
     duration=5,
+    motor_ids=chosen_motor_ids,
     threshold=4
 )
 
-ik_solution_2, traj3 = execute_trajectory(
-    left_arm_chain,
-    robot,
-    ik_solution_2,
-    target_orientation,
-    start_pos=pick_up_position,
-    end_pos=end_position,
-    duration=5,
-    threshold=4
-)
+# # 8. Update the state for the arm that just moved
+# if chosen_chain == left_arm_chain:
+#     left_arm_angles = new_arm_angles
+#     print("Updated left arm angles.")
+# else:
+#     right_arm_angles = new_arm_angles
+#     print("Updated right arm angles.")
 
-ik_solution_2, traj4 = execute_trajectory(
-    left_arm_chain,
-    robot,
-    ik_solution_2,
-    target_orientation,
-    start_pos=end_position,
-    end_pos=end_position,
-    duration=5,
-    threshold=4
-)
+# sim_run_time = time.time() - sim_run_start
+# print(f"Sim Run Time: {sim_run_time:.6f} seconds")
 
+# total_time = time.time() - start_to_finish_time
+# print(f"\nStart to finish: {total_time:.6f} seconds")
 
-# ---------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------
-# Code to plot out workspace
- 
+# pick_up_position = [end_position[0], end_position[1], end_position[2]-(end_effector_z_offset/2)]
+# end_board_position = [end_position[0], end_position[1]+0.1, end_position[2]]
 
-# # Put this near the top with your imports
-# import numpy as np
-# from mpl_toolkits.mplot3d import Axes3D
-# from ikpy.chain import Chain
-# from tqdm import tqdm 
-# import matplotlib.pyplot as plt
+# ik_solution_2, traj2 = execute_trajectory(
+#     left_arm_chain,
+#     robot,
+#     ik_solution_2,
+#     target_orientation,
+#     start_pos=end_position,
+#     end_pos=pick_up_position,
+#     duration=5,
+#     threshold=4
+# )
 
-# def sample_joint_space(n_samples, joint_limits):
-#     """
-#     n_samples: int
-#     joint_limits: list of (min, max) for each joint (excluding the fixed root element)
-#     returns: array (n_samples, n_joints)
-#     """
-#     n_joints = len(joint_limits)
-#     samples = np.random.rand(n_samples, n_joints)
-#     for j in range(n_joints):
-#         lo, hi = joint_limits[j]
-#         samples[:, j] = lo + samples[:, j] * (hi - lo)
-#     return samples
+# ik_solution_2, traj3 = execute_trajectory(
+#     left_arm_chain,
+#     robot,
+#     ik_solution_2,
+#     target_orientation,
+#     start_pos=pick_up_position,
+#     end_pos=end_position,
+#     duration=5,
+#     threshold=4
+# )
 
-# def fk_positions_for_samples(chain: Chain, samples):
-#     """
-#     chain: ikpy.Chain for the arm (with same order of moving joints as samples)
-#     samples: (N, n_joints) numpy
-#     returns: (N,3) end-effector positions in chain base frame
-#     """
-#     points = []
-#     for q in samples:
-#         # ikpy expects a full vector with first element = 0 (dummy) if URDF includes root
-#         # Many Chains include a fixed element; adapt as needed. Here we try directly.
-#         try:
-#             T = chain.forward_kinematics(q)
-#         except Exception:
-#             # If chain expects full vector with extra leading 0:
-#             padded = np.concatenate(([0.0], q))
-#             T = chain.forward_kinematics(padded)
-#         pos = T[:3, 3]
-#         points.append(pos)
-#     return np.array(points)
-
-# # --- cheap sphere-approx self collision ---
-# def build_body_spheres(chain: Chain, radii_by_link=None):
-#     """
-#     Build sphere approximations centered at link frames (link origins).
-#     radii_by_link: dict mapping link_name -> radius (meters). If None, use a small default or
-#                    infer from URDF visuals manually.
-#     returns list of (link_frame_index, center_func, radius) where center_func(q) gives center.
-#     """
-#     centers_idx = []
-#     # We will use forward_kinematics of each link frame.
-#     link_names = [j.name for j in chain.links]
-#     # Provide default radii if not provided:
-#     if radii_by_link is None:
-#         radii_by_link = {name: 0.07 for name in link_names}  # tweak per robot
-#     # prepare functions to compute center position for each link index
-#     for idx, link in enumerate(chain.links):
-#         def center_fn(q, idx_local=idx):
-#             # compute FK up to link idx_local
-#             # ikpy doesn't expose per-link FK easily, but chain.links[...] has frames
-#             # We'll do full FK and extract transformation of the link's frame if available.
-#             T = chain.forward_kinematics(q, full_kinematics=True)
-#             # full_kinematics returns list of transforms for each frame
-#             # try to use that; else fallback to whole transform
-#             if isinstance(T, (list, tuple)) and len(T) > idx_local:
-#                 tlink = T[idx_local]
-#                 return tlink[:3, 3]
-#             else:
-#                 return chain.forward_kinematics(q)[:3, 3]
-#         centers_idx.append((link.name, center_fn, radii_by_link.get(link.name, 0.07)))
-#     return centers_idx
-
-# def is_self_collision(q, sphere_list, min_clearance=0.02):
-#     """
-#     sphere_list: list of (name, center_fn, radius)
-#     returns True if any pair of spheres overlap (collision) or are too close
-#     """
-#     centers = [fn(q) for (_n, fn, r) in sphere_list]
-#     radii = [r for (_n, _fn, r) in sphere_list]
-#     centers = np.array(centers)
-#     for i in range(len(centers)):
-#         for j in range(i + 1, len(centers)):
-#             d = np.linalg.norm(centers[i] - centers[j])
-#             if d < (radii[i] + radii[j] + min_clearance):
-#                 return True
-#     return False
-
-# # --- voxelize and plot ---
-# def voxelize_points(points, voxel_size=0.02, grid_margin=0.2):
-#     mins = points.min(axis=0) - grid_margin
-#     maxs = points.max(axis=0) + grid_margin
-#     dims = np.ceil((maxs - mins) / voxel_size).astype(int)
-#     # convert points to voxel indices
-#     idxs = np.floor((points - mins) / voxel_size).astype(int)
-#     occupancy = {}
-#     for ix, iy, iz in idxs:
-#         occupancy[(ix, iy, iz)] = occupancy.get((ix, iy, iz), 0) + 1
-#     voxels = np.array(list(occupancy.keys()))
-#     counts = np.array(list(occupancy.values()))
-#     # convert back to centers
-#     centers = mins + (voxels + 0.5) * voxel_size
-#     return centers, counts
-
-# def plot_point_cloud(points, s=2):
-#     fig = plt.figure(figsize=(8,8))
-#     ax = fig.add_subplot(111, projection='3d')
-#     ax.scatter(points[:,0], points[:,1], points[:,2], s=s)
-#     ax.set_xlabel('Z'); ax.set_ylabel('Y'); ax.set_zlabel('X')
-#     plt.show()
-
-# left_arm_chain = Chain.from_urdf_file(
-#     "backend/Testing/FinleyJNEWARMS_2024_straight_4.urdf",
-#     base_elements=['shoulder1_left', 'shoulder1_left'],
-#     active_links_mask=[False, True, True, True, True, True, True]  
+# ik_solution_2, traj4 = execute_trajectory(
+#     left_arm_chain,
+#     robot,
+#     ik_solution_2,
+#     target_orientation,
+#     start_pos=end_position,
+#     end_pos=end_position,
+#     duration=5,
+#     threshold=4
 # )
 
 
-# # Determine joint limits: you should get these from your URDF or robot config.
-# # For demo, assume 7 dof from joint 1..6 (adjust count to your Chain).
-# # Format: [(min, max), ...] in radians
-# joint_limits = [(-2.8, 2.8), (-1.5, 1.5), (-2.8, 2.8), (-2.0, 2.0), (-2.5, 2.5), (-3.0, 3.0)]
+# ---------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
 
-# N = 8000
-# samples = sample_joint_space(N, joint_limits)
+# import numpy as np
+# import time
 
-# # Optionally filter by self-collision using the sphere approximation:
-# valid_points = []
-# for q in tqdm(samples):
-#     # just collect positions
-#     pos = left_arm_chain.forward_kinematics(np.concatenate(([0.0], q)))[:3,3]
-#     valid_points.append(pos)
-# valid_points = np.array(valid_points)
-# print("Valid reachable points:", valid_points.shape[0])
+# # --- Configuration Parameters ---
+# # Define these at the top of your script
+# INTERMEDIATE_POS = np.array([0.0, 0.3, 0.4])  # A safe "home" position
+# OFF_BOARD_POS = np.array([0.4, 0.0, 0.2])     # Position to drop captured pieces
+# Z_OFFSET = 0.08                              # Vertical distance for safe approach (in meters)
+
+# # --- Gripper Control (Placeholder) ---
+# # Replace these with your actual gripper commands
+# def grip(robot):
+#     print("ACTION: Gripper Closing")
+#     # your_robot.close_gripper()
+#     time.sleep(1)
+
+# def release(robot):
+#     print("ACTION: Gripper Opening")
+#     # your_robot.open_gripper()
+#     time.sleep(1)
+
+# def perform_pick_or_place(action, target_pos, current_ik, robot, chain, target_orientation):
+#     #Move to a safe position directly above the target
+#     safe_approach_pos = target_pos + np.array([0, 0, Z_OFFSET])
+    
+#     # Get current position from FK
+#     fk_solution = chain.forward_kinematics(current_ik)
+#     start_pos = np.array([fk_solution[0][3], fk_solution[1][3], fk_solution[2][3]])
+    
+#     ik_after_approach, _ = execute_trajectory(
+#         chain, robot, current_ik, target_orientation,
+#         start_pos=start_pos, end_pos=safe_approach_pos, duration=3
+#     )
+
+#     #Move straight down to the target
+#     ik_after_descend, _ = execute_trajectory(
+#         chain, robot, ik_after_approach, target_orientation,
+#         start_pos=safe_approach_pos, end_pos=target_pos, duration=2
+#     )
+
+#     #Perform the gripper action
+#     if action == 'pick':
+#         grip(robot)
+#     elif action == 'place':
+#         release(robot)
+
+#     #Move straight back up to the safe position
+#     ik_after_ascend, _ = execute_trajectory(
+#         chain, robot, ik_after_descend, target_orientation,
+#         start_pos=target_pos, end_pos=safe_approach_pos, duration=2
+#     )
+    
+#     return ik_after_ascend
 
 
-# # Make voxel occupancy for visualization
-# centers, counts = voxelize_points(valid_points, voxel_size=0.02)
-# plot_point_cloud(centers)
+# def handle_move_piece(piece_loc, goal_loc, current_ik, robot, chain, target_orientation):
+#     #Pick up the piece from its starting location
+#     ik_after_pick = perform_pick_or_place(
+#         'pick', piece_loc, current_ik, robot, chain, target_orientation
+#     )
+    
+#     #Place the piece at the goal location
+#     ik_after_place = perform_pick_or_place(
+#         'place', goal_loc, ik_after_pick, robot, chain, target_orientation
+#     )
+
+#     #Return to the intermediate 'Idle' position
+#     fk_solution = chain.forward_kinematics(ik_after_place)
+#     start_pos = np.array([fk_solution[0][3], fk_solution[1][3], fk_solution[2][3]])
+    
+#     final_ik, _ = execute_trajectory(
+#         chain, robot, ik_after_place, target_orientation,
+#         start_pos=start_pos, end_pos=INTERMEDIATE_POS, duration=4
+#     )
+    
+#     return final_ik
+
+# def handle_capture_piece(your_piece_loc, capture_loc, current_ik, robot, chain, target_orientation):
+#     """
+#     Handles the 'Capture Piece' state logic.
+#     1. Removes the opponent's piece from the board.
+#     2. Moves your piece to the now-empty capture location.
+#     Returns the final IK solution after returning to the intermediate position.
+#     """
+#     print(f"\n--- EXECUTING: CAPTURE PIECE ---")
+    
+#     # Part 1: Remove the opponent's piece
+#     print("Step 1: Removing opponent's piece from capture location...")
+#     ik_after_removal = perform_pick_or_place(
+#         'pick', capture_loc, current_ik, robot, chain, target_orientation
+#     )
+#     print("\nStep 2: Placing opponent's piece off-board...")
+#     ik_after_drop = perform_pick_or_place(
+#         'place', OFF_BOARD_POS, ik_after_removal, robot, chain, target_orientation
+#     )
+
+#     # Part 2: Move your piece to the capture location
+#     print("\nStep 3: Picking up your piece...")
+#     ik_after_pick = perform_pick_or_place(
+#         'pick', your_piece_loc, ik_after_drop, robot, chain, target_orientation
+#     )
+#     print("\nStep 4: Placing your piece at capture location...")
+#     ik_after_place = perform_pick_or_place(
+#         'place', capture_loc, ik_after_pick, robot, chain, target_orientation
+#     )
+
+#     # Part 3: Return to the intermediate 'Idle' position
+#     print("\nStep 5: Returning to Idle position...")
+#     fk_solution = chain.forward_kinematics(ik_after_place)
+#     start_pos = np.array([fk_solution[0][3], fk_solution[1][3], fk_solution[2][3]])
+
+#     final_ik, _ = execute_trajectory(
+#         chain, robot, ik_after_place, target_orientation,
+#         start_pos=start_pos, end_pos=INTERMEDIATE_POS, duration=4
+#     )
+    
+#     print("--- CAPTURE PIECE COMPLETE ---")
+#     return final_ik
