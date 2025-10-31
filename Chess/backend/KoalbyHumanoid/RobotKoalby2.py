@@ -11,7 +11,7 @@ from backend.KoalbyHumanoid.ArduinoSerial import ArduinoSerial
 from backend.KoalbyHumanoid.Motor import Motor
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 from backend.KoalbyHumanoid import poe as poe
-from backend.KoalbyHumanoid.IMU import IMU
+from backend.KoalbyHumanoid.IMU import IMU, IMUManager
 from backend.KoalbyHumanoid.Electromagnet import Electromagnet
 
 TIME_BETWEEN_MOTOR_CHECKS = 2
@@ -28,6 +28,7 @@ class Robot2():
             self.client_id = None
             self.arduino_serial_init()
             self.motors = self.real_motors_init()
+            self.imu_manager = IMUManager(self.is_real, sim=self.sim)
             
             self.imuPIDX = PID(0.2,0,0.1) # 1
             self.imuPIDZ = PID(0.25,0.0,0.0075)
@@ -54,6 +55,7 @@ class Robot2():
         self.balancePoint = np.array([0, 0, 0])
         self.rightFootBalancePoint = np.array([0, 0, 0])
         self.leftFootBalancePoint = np.array([0, 0, 0])
+        self.imu_manager = IMUManager(self.is_real, sim=self.sim)
         self.primitives = []
         self.chain = self.chain_init()
         self.links = self.links_init()
@@ -209,7 +211,7 @@ class Robot2():
 
     def updateRightArmCoM(self):
         motorList = [self.motors[0], self.motors[1], self.motors[2], self.motors[3], self.motors[4], self.motors[5]]
-        linkList = [self.links[0], self.links[1], self.links[2], self.links[3], self.links[4], self.motors[5]]
+        linkList = [self.links[0], self.links[1], self.links[2], self.links[3], self.links[4], self.links[5]]
         return poe.calcLimbCoM(motorList, linkList)
     
     def updateLeftArmCoM(self):
