@@ -43,6 +43,7 @@ class Robot2():
             self.motors = self.sim_motors_init()
             
             self.imuPIDX = PID(0.3,0.005,0.1)
+            self.imuPIDY = PID(0.3,0.005,0.1)
             self.imuPIDZ = PID(0.25,0.0,0.0075)
 
         self.lastMotorCheck = time.time()
@@ -315,23 +316,71 @@ class Robot2():
         return (mr.IKinSpace(Slist, M, T, thetaGuess, eomg, ev))
 
     # methods to balance (unassisted standing)
+     # Fuse IMU data from right_chest_imu, left_chest_imu and torso_imu
+    def fuse_imu_data(self, right_chest_imu, left_chest_imu):
+        """
+        Fuses the IMU data from right chest, left chest, and torso.
 
-    def IMUBalance(self, Xtarget, Ztarget):
-        data = self.imu.getData()
+        Args:
+            right_chest_imu (array-like): [pitch, roll, yaw] from the right chest IMU.
+            left_chest_imu (array-like): [pitch, roll, yaw] from the left chest IMU.
+            torso_imu (array-like): [pitch, roll, yaw] from the torso IMU.
 
-        xRot = data[0]
-        zRot = data[2]
+        Returns:
+            np.array: Fused [pitch, roll, yaw] data for PID controller input.
+        """
+        self.fused_imu = np.mean([right_chest_imu, left_chest_imu], axis=0)
+        return self.fused_imu
+
+
+    def IMUBalance(self, Xtarget, Ytarget, Ztarget):
+        print("1")
+        imu_data = self.imu_manager.getAllIMUData()
+        print(imu_data)
+        right_chest_imu = imu_data["RightChest"]
+        left_chest_imu = imu_data["LeftChest"]
+        # torso_imu = imu_data["Torso"]
+        
+        # Fuse IMU data
+        fused_data = self.fuse_imu_data(right_chest_imu, left_chest_imu)
+        
+        # Use the fused data for balance calculations
+        xRot = fused_data[0]
+        yRot = fused_data[1]
+        zRot = fused_data[2]  
+     
         Xerror = Xtarget - xRot
+        Yerror = Ytarget - yRot
         Zerror = Ztarget - zRot
-        self.imuPIDX.setError(Xerror)
-        self.imuPIDZ.setError(Zerror)
-        newTargetX = self.imuPIDX.calculate()
-        newTargetZ = self.imuPIDZ.calculate()
-        # print(math.degrees(newTargetX), math.degrees(newTargetZ))
-        self.motors[13].target = (newTargetZ, 'P')
-        self.motors[10].target = (newTargetX, 'P')
 
-        self.checkMotorsAtInterval(TIME_BETWEEN_MOTOR_CHECKS)
+        self.imuPIDX.setError(Xerror)
+        self.imuPIDY.setError(Yerror)
+        self.imuPIDZ.setError(Zerror)
+
+        newTargetX = self.imuPIDX.calculate()
+        newTargetY = self.imuPIDY.calculate()
+        newTargetZ = self.imuPIDZ.calculate()
+
+        # self.checkMotorsAtInterval(TIME_BETWEEN_MOTOR_CHECKS)
+        return [newTargetX, newTargetY, newTargetZ]
+
+
+    # def IMUBalance(self, Xtarget, Ztarget):
+    #     data = self.imu.getData()
+
+    #     xRot = data[0]
+    #     zRot = data[2]
+    #     Xerror = Xtarget - xRot
+    #     Zerror = Ztarget - zRot
+    #     self.imuPIDX.setError(Xerror)
+    #     self.imuPIDZ.setError(Zerror)
+    #     newTargetX = self.imuPIDX.calculate()
+    #     newTargetZ = self.imuPIDZ.calculate()
+    #     # print(math.degrees(newTargetX), math.degrees(newTargetZ))
+    #     self.motors[13].target = (newTargetZ, 'P')
+    #     self.motors[10].target = (newTargetX, 'P')
+
+    #     self.checkMotorsAtInterval(TIME_BETWEEN_MOTOR_CHECKS)
 
     def VelBalance(self, balancePoint):
         balanceError = balancePoint - self.CoM

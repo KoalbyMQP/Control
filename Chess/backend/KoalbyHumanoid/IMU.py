@@ -68,7 +68,7 @@ class IMU():
                 self.sim.getFloatSignal(f"{prefix}_gyroZ"),
                 self.sim.getFloatSignal(f"{prefix}_accelX"),
                 self.sim.getFloatSignal(f"{prefix}_accelY"),
-                self.sim.getFloatSignal(f"{prefix}_accelZ")
+                self.sim.getFloatSignal(f"{prefix}_accelZ"),
             ]
             # Handle cases where signals may not be available (default to 0 if no data)
             self.data = [0 if dataPoint is None else dataPoint for dataPoint in self.data]
@@ -87,7 +87,7 @@ class IMUManager():
         """
         self.isReal = isReal
         self.sim = sim
-        self.imu_names = ["RightFoot", "LeftFoot", "CenterOfMass", "Torso", "RightChest", "LeftChest"]
+        self.imu_names = ["RightChest", "LeftChest"]
         self.imus = {name: IMU(isReal, sim, name) for name in self.imu_names}
 
     def getAllIMUData(self):
