@@ -1,7 +1,6 @@
 import adafruit_bno055
 import numpy as np
 import math
-from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 
 try:
     import board
