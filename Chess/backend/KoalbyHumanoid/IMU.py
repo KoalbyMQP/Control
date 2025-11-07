@@ -9,7 +9,7 @@ except NotImplementedError:
     print("Failed to import board when not running on Raspberry Pi")
 
 class IMU():
-    def __init__(self, isReal, sim=None, imu_name="RightFoot"):
+    def __init__(self, isReal, sim, imu_name):
         """
         Initialize the IMU.
 
@@ -30,6 +30,11 @@ class IMU():
             except:
                 print("No IMU detected, disabling IMU")
                 self.isConnected = False
+        else:
+            if self.sim is None:
+                raise ValueError("Simulation client must be provided for simulated IMU")
+            else:
+                self.isConnected = True
 
     def zero(self):
         if self.isReal:
@@ -77,7 +82,7 @@ class IMU():
         return self.data
 
 class IMUManager():
-    def __init__(self, isReal, sim=None):
+    def __init__(self, isReal, sim):
         """
         Initialize the IMU manager for handling multiple IMUs.
         

@@ -41,14 +41,16 @@ class Robot2():
             self.sim = self.client.require('sim')
             self.motorMovePositionScriptHandle = self.sim.getScript(self.sim.scripttype_childscript, self.sim.getObject("./chest_respondable"))
             self.motors = self.sim_motors_init()
-            
+            self.imu_manager = IMUManager(self.is_real, sim=self.sim)
+
+
             self.imuPIDX = PID(0.3,0.005,0.1)
             self.imuPIDY = PID(0.3,0.005,0.1)
             self.imuPIDZ = PID(0.25,0.0,0.0075)
 
         self.lastMotorCheck = time.time()
 
-        self.imu = IMU(self.is_real, sim=self.sim)
+        # self.imu = IMU(self.is_real, sim=self.sim)
         self.CoM = np.array([0, 0, 0])
         self.ang_vel = [0, 0, 0]
         self.last_vel = [0, 0, 0]
@@ -56,7 +58,6 @@ class Robot2():
         self.balancePoint = np.array([0, 0, 0])
         self.rightFootBalancePoint = np.array([0, 0, 0])
         self.leftFootBalancePoint = np.array([0, 0, 0])
-        self.imu_manager = IMUManager(self.is_real, sim=self.sim)
         self.primitives = []
         self.chain = self.chain_init()
         self.links = self.links_init()
@@ -334,7 +335,6 @@ class Robot2():
 
 
     def IMUBalance(self, Xtarget, Ytarget, Ztarget):
-        print("1")
         imu_data = self.imu_manager.getAllIMUData()
         print(imu_data)
         right_chest_imu = imu_data["RightChest"]
