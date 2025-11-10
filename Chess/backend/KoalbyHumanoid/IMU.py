@@ -1,7 +1,6 @@
 import adafruit_bno055
 import numpy as np
 import math
-from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 
 try:
     import board
@@ -9,7 +8,7 @@ except NotImplementedError:
     print("Failed to import board when not running on Raspberry Pi")
 
 class IMU():
-    def __init__(self, isReal, sim=None, imu_name="RightFoot"):
+    def __init__(self, isReal, sim, imu_name):
         """
         Initialize the IMU.
 
@@ -30,6 +29,11 @@ class IMU():
             except:
                 print("No IMU detected, disabling IMU")
                 self.isConnected = False
+        else:
+            if self.sim is None:
+                raise ValueError("Simulation client must be provided for simulated IMU")
+            else:
+                self.isConnected = True
 
     def zero(self):
         if self.isReal:
@@ -68,7 +72,7 @@ class IMU():
                 self.sim.getFloatSignal(f"{prefix}_gyroZ"),
                 self.sim.getFloatSignal(f"{prefix}_accelX"),
                 self.sim.getFloatSignal(f"{prefix}_accelY"),
-                self.sim.getFloatSignal(f"{prefix}_accelZ")
+                self.sim.getFloatSignal(f"{prefix}_accelZ"),
             ]
             # Handle cases where signals may not be available (default to 0 if no data)
             self.data = [0 if dataPoint is None else dataPoint for dataPoint in self.data]
@@ -77,7 +81,7 @@ class IMU():
         return self.data
 
 class IMUManager():
-    def __init__(self, isReal, sim=None):
+    def __init__(self, isReal, sim):
         """
         Initialize the IMU manager for handling multiple IMUs.
         
@@ -87,7 +91,7 @@ class IMUManager():
         """
         self.isReal = isReal
         self.sim = sim
-        self.imu_names = ["RightFoot", "LeftFoot", "CenterOfMass", "Torso", "RightChest", "LeftChest"]
+        self.imu_names = ["RightChest", "LeftChest"]
         self.imus = {name: IMU(isReal, sim, name) for name in self.imu_names}
 
     def getAllIMUData(self):
