@@ -325,3 +325,5 @@ Cargo.lock
 
 # Go
 vendor/
+
+!backend/Testing/
