@@ -247,7 +247,7 @@ class Robot2():
             next = self.chain[next.name]            
         slist.reverse()
         thetaList.reverse()
-        # print(thetaList)
+        #print(thetaList)
         location = mr.FKinSpace(M,np.transpose(slist),thetaList)
         return location
     
