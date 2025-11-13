@@ -1,6 +1,6 @@
 import numpy as np
 
-def state_estimator(self, encoder_in, tilt_in):
+def state_estimator(self, encoder_in, tilt_in, yaw_in):
 
         dwheel = (encoder_in-self.encoder_last) * self.wheel_radius
         self.encoder_last = encoder_in
@@ -11,16 +11,17 @@ def state_estimator(self, encoder_in, tilt_in):
         self.velocity[0] = alpha * (ds / self.timestep_s) + (1- alpha)* self.velocity[0]
 
         # self.velocity[1] = self.velocity[1] + dheading
+        self.velocity[1] = yaw_in
 
         self.update_phi(tilt_in)
 
 
 def find_state_space(self):
     # physical params (example values, set to your system)
-        M = 1.5        # cart mass
-        m = 9.5*2        # pendulum mass (do NOT set to 0)
-        l = 0.36      # pendulum length to center of mass
-        I = 0.23327636543      # pendulum moment of inertia about its COM
+        M = 2        # cart mass
+        m = self.mass*3        # pendulum mass (do NOT set to 0)
+        l = 0.5        # pendulum length to center of mass
+        I = 2      # pendulum moment of inertia about its COM
         b = 0        # cart viscous damping (friction)
         g = 9.81       # gravity
 

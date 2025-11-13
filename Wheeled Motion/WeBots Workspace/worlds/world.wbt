@@ -5,10 +5,10 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
 
 WorldInfo {
-  basicTimeStep 2
+  basicTimeStep 1
 }
 Viewpoint {
-  orientation -0.3907123613031471 0.6787776213209896 0.6217755153741085 0.5759651273093606
+  orientation -0.4078400537494489 0.7502547703782998 0.5203693592845865 0.48274105283960184
   position -6.162454470993128 -2.214074789836739 2.9723691164697152
 }
 TexturedBackground {
@@ -16,7 +16,7 @@ TexturedBackground {
 TexturedBackgroundLight {
 }
 RectangleArena {
-  floorSize 5 20
+  floorSize 20 20
 }
 Robot {
   translation 0 0 0.46

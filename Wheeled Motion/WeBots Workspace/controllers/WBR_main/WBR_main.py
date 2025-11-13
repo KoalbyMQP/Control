@@ -14,44 +14,53 @@ def control_loop(robot, robo, read_pos, imu, set_wheels_torque, timestep):
     torque_store = []
     time_store = []
     velocity_store = []
+    alpha_t_store = []
     print("starting control loop")
 
     torque = 0
+    velocity_des_list = [np.array([0.5, 3]), np.array([1, 1]), np.array([1, -1]), np.array([1, -1])]
 
     while robot.step(timestep) != -1:
         current_time = robot.getTime()
         
-        
+        # if (current_time * 1000) % 2 == 1:
         # Read sensors and estimate state
         enc_in = read_pos()
         rpy = imu.getRollPitchYaw()
         imu_in = rpy[0]
-        robo.state_estimator(enc_in, imu_in)
+        yaw_in = rpy[2]
+        robo.state_estimator(enc_in, imu_in, yaw_in)
 
         # Run Velocity Controller
-        velocity_des = np.array([1,0])
+        velocity_des = velocity_des_list[int(current_time // 5)]
         robo.velocity_controller(velocity_des)
         # print("self.phi_des is ", robo.phi_des)
         # print("self.velocity is ", robo.velocity)
         # robo.update_phi_des(0.01)
 
-        if True:#(current_time * 1000) % (1*timestep) == timestep:
-        # Run Balance Controller
-            alpha = 0.2
-            torque = alpha * robo.balance_controller() + (1.0 - alpha) * torque
-            set_wheels_torque(torque, torque)
+        if (current_time * 1000) % 5 == 1:
+            # Run Balance Controller
+            old_torque = torque
+            torque = robo.balance_controller()
+            alpha_max = 0.5
+            k_smoothing = 5
+            alpha_t = alpha_max / (1 + k_smoothing * abs(torque-old_torque))
+            alpha_t = np.clip(alpha_t, 0.2, alpha_max)
+            torque = alpha_t * torque  + (1.0 - alpha_t) * old_torque
+            set_wheels_torque(torque + robo.wheel_differential, torque - robo.wheel_differential)
 
             velocity_store.append(robo.velocity[0])
             phi_store.append(imu_in)
             phi_des_store.append(robo.phi_des[0])
             torque_store.append(torque)
             time_store.append(current_time)
+            alpha_t_store.append(alpha_t)
 
-        if current_time > 10 or abs(imu_in) > 0.2:
+        if current_time > 15 or abs(imu_in) > 0.2:
             print("breaking control loop")
             break
     
-    return phi_store, phi_des_store, torque_store, time_store, velocity_store
+    return phi_store, phi_des_store, torque_store, time_store, velocity_store, alpha_t_store
 
 if __name__ == "__main__":
 
@@ -103,7 +112,7 @@ if __name__ == "__main__":
     K = robo.create_controller()
     print(K)
 
-    phi_store, phi_des_store, torque_store, time_store, velocity_store = control_loop(robot, robo, read_pos, imu, set_wheels_torque, timestep)
+    phi_store, phi_des_store, torque_store, time_store, velocity_store, alpha_t_store = control_loop(robot, robo, read_pos, imu, set_wheels_torque, timestep)
 
     print("made it past control loop")
 
@@ -111,6 +120,8 @@ if __name__ == "__main__":
     phi_des_store = np.array(phi_des_store)
     torque_store = np.array(torque_store)
     time_store = np.array(time_store)
+    alpha_t_store = np.array(alpha_t_store)
+
     print("stors converted")
 
     plt.figure(figsize=(10, 6))
@@ -120,6 +131,7 @@ if __name__ == "__main__":
     plt.plot(time_store, phi_des_store, label='Desired Tilt')
     plt.plot(time_store, phi_des_store-phi_store, label='Tilt Error')
     plt.plot(time_store, velocity_store, label='Velocity')
+    plt.plot(time_store, alpha_t_store, label='alpha_t')
     plt.plot(time_store, torque_store, label='Torque', linestyle=':', color='r')
 
     print("plots variables aadded")
