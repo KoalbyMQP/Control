@@ -16,6 +16,7 @@ class WBR:
         self.max_torque = 0.3
         self.max_tilt = 0.05
         self.wheel_differential = 0
+        self.torque = 0
 
     # Updates phi and dphi
     def update_phi(self, new_phi):
@@ -26,3 +27,6 @@ class WBR:
         self.phi_des[1] = (new_phi - self.phi_des[0]) / self.timestep_s
         self.phi_des[0] = new_phi
 
+    def export_wheel_torques(self):
+        return np.array([self.torque + self.wheel_differential,
+                        self.torque - self.wheel_differential])
