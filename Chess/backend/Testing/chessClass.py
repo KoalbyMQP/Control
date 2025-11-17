@@ -59,11 +59,12 @@ class ArmDemo:
             print("Please check URDF path and start positions.")
             sys.exit(1)
 
-    def trigger_move_sequence(self, target_pos_1, target_pos_2):
+    def trigger_move_sequence(self, target_pos_1, target_pos_2, intermediate_pos=None):
         """Triggers the state machine to perform a move sequence."""
         if self.state == "WAITING":
             self.pending_target_1 = target_pos_1
             self.pending_target_2 = target_pos_2
+            self.pending_intermediate = intermediate_pos
             self.state = "MOVE_PIECE"
             print(f"Trigger received. State changed to MOVE_PIECE.")
         else:
@@ -82,11 +83,13 @@ class ArmDemo:
                 
                 self.move_to_position_with_preferred_arm(
                     self.pending_target_1,
-                    self.pending_target_2
+                    self.pending_target_2,
+                    self.pending_intermediate
                 )
                 
                 self.pending_target_1 = None
                 self.pending_target_2 = None
+                self.pending_intermediate = None
             else:
                 print("Error: MOVE_PIECE state entered but no targets were set.")
             
@@ -191,41 +194,89 @@ class ArmDemo:
 
         print(f"=== FINISHED {arm_side.upper()} ARM SEQUENCE ===\n")
 
-    def move_to_position_with_preferred_arm(self, target_pos_1, target_pos_2):
-        print(f"\n--- Calculating Preferred Arm for Sequence ({target_pos_1} -> {target_pos_2}) ---")
+    def move_to_position_with_preferred_arm(self, target_pos_1, target_pos_2, intermediate_pos=None):
+        print(f"\n--- Analyzing Move: {target_pos_1} -> {target_pos_2} ---")
 
-        # 1. Get current end-effector positions for both arms
-        current_fk_left = self.controller.left_arm_chain.forward_kinematics(self.controller.ik_solution_left)
-        current_pos_left = current_fk_left[:3, 3]
+        # 1. Define Coordinate Logic
+        # Assuming X > 0 is Left Side, X < 0 is Right Side (Based on your target queue)
+        # Assuming X = 0 is the center line
+        start_x = target_pos_1[0]
+        end_x = target_pos_2[0]
         
-        current_fk_right = self.controller.right_arm_chain.forward_kinematics(self.controller.ik_solution_right)
-        current_pos_right = current_fk_right[:3, 3]
-
-        print(f"Current Left Arm Position: {current_pos_left}")
-        print(f"Current Right Arm Position: {current_pos_right}")
-
-        dist_left = np.linalg.norm(np.array(target_pos_1) - current_pos_left)
-        dist_right = np.linalg.norm(np.array(target_pos_1) - current_pos_right)
-
-        print(f"Distance to Left: {dist_left:.4f}")
-        print(f"Distance to Right: {dist_right:.4f}")
-
-        if dist_left <= dist_right:
-            print("Preferred Arm: LEFT")
-            preferred_arm = "left"
-            start_pos = current_pos_left
+        # Handoff point logic: Use passed value or fallback to default
+        if intermediate_pos is not None:
+            handoff_pos = intermediate_pos
+            print(f"Using Provided Intermediate Position: {handoff_pos}")
         else:
-            print("Preferred Arm: RIGHT")
-            preferred_arm = "right"
-            start_pos = current_pos_right
+            # Default fallback if none provided
+            handoff_pos = [0.0, -0.3, target_pos_1[2]] 
+            print(f"No Intermediate provided. Using calculated default: {handoff_pos}")
 
-        print(f"Executing full sequence for {preferred_arm} arm...")
-        self.perform_arm_sequence(
-            arm_side=preferred_arm,
-            target_pos_1=target_pos_1,
-            target_pos_2=target_pos_2
-        )
-        print(f"--- Preferred Arm Sequence Complete ---")
+        is_start_left = start_x >= 0
+        is_end_left = end_x >= 0
+
+        # 2. Check for Cross-Board Movement
+        if is_start_left != is_end_left:
+            print(">>> CROSS-BOARD MOVE DETECTED (Intersection Prevention Active) <<<")
+            
+            # CASE A: Left to Right
+            if is_start_left:
+                print("Sequence: Left Arm -> Handoff -> Right Arm")
+                
+                # Step A: Left Arm moves Piece to Center
+                self.perform_arm_sequence(
+                    arm_side="left",
+                    target_pos_1=target_pos_1,
+                    target_pos_2=handoff_pos
+                )
+                
+                print(">>> Handoff Point Reached. Switching Arms. <<<")
+                
+                # Step B: Right Arm moves Piece from Center to Destination
+                self.perform_arm_sequence(
+                    arm_side="right",
+                    target_pos_1=handoff_pos,
+                    target_pos_2=target_pos_2
+                )
+
+            # CASE B: Right to Left
+            else:
+                print("Sequence: Right Arm -> Handoff -> Left Arm")
+                
+                # Step A: Right Arm moves Piece to Center
+                self.perform_arm_sequence(
+                    arm_side="right",
+                    target_pos_1=target_pos_1,
+                    target_pos_2=handoff_pos
+                )
+
+                print(">>> Handoff Point Reached. Switching Arms. <<<")
+
+                # Step B: Left Arm moves Piece from Center to Destination
+                self.perform_arm_sequence(
+                    arm_side="left",
+                    target_pos_1=handoff_pos,
+                    target_pos_2=target_pos_2
+                )
+
+        # 3. Standard Single-Arm Movement (No Crossing)
+        else:
+            # Determine arm based on side (Left side uses Left arm, Right uses Right)
+            # This is safer than distance calculation if we have strictly defined zones
+            if is_start_left:
+                preferred_arm = "left"
+            else:
+                preferred_arm = "right"
+
+            print(f"Standard Move (Same Side): Using {preferred_arm.upper()} arm.")
+            
+            self.perform_arm_sequence(
+                arm_side=preferred_arm,
+                target_pos_1=target_pos_1,
+                target_pos_2=target_pos_2
+            )
+        
+        print(f"--- Move Sequence Complete ---")
 
 if __name__ == "__main__":
     is_real_robot = False
@@ -242,17 +293,20 @@ if __name__ == "__main__":
     print("\n--- Arm Demo State Machine Initialized ---")
     
     targets_queue = [
-        # Right-side targets
-        [-0.131, -0.368, -0.127],
-        [-0.095, -0.368, -0.127], 
-        [-0.058, -0.368, -0.127], 
-        [-0.021, -0.368, -0.127],
-        # Left-side targets
-        [0.015, -0.368, -0.127],
-        [0.052, -0.368, -0.127],
-        [0.090, -0.368, -0.127],
+        # # Right-side targets
+        # [-0.131, -0.368, -0.127],
+        # [-0.095, -0.368, -0.127], 
+        # [-0.058, -0.368, -0.127], 
+        # [-0.021, -0.368, -0.127],
+        # # Left-side targets
+        # [0.015, -0.368, -0.127],
+        # [0.052, -0.368, -0.127],
+        # [0.090, -0.368, -0.127],
         [0.128, -0.368, -0.127]
     ]
+
+    global_intermediate_point = [0.0, -0.3, -0.127]
+
     
     print(f"Ready to process {len(targets_queue)} moves.")
 
@@ -264,14 +318,25 @@ if __name__ == "__main__":
                 
                 if targets_queue:
                     next_target = targets_queue.pop(0) 
+                    # Logic to decide start position based on next target
+                    # (Here we alternate or pick based on side just for testing)
                     if next_target[0] >= 0:
-                        start_pick_pos = demo.left_target_1
-                    else:
+                        # Target is Left, start from Right (Force Cross-over test)
                         start_pick_pos = demo.right_target_1
+                    else:
+                        # Target is Right, start from Left (Force Cross-over test)
+                        start_pick_pos = demo.left_target_1
+                    
                     # ---------------------------------
                     print(f"Triggering move sequence: {start_pick_pos} -> {next_target}")
+                    print(f"Passing Intermediate Point: {global_intermediate_point}")
                     
-                    demo.trigger_move_sequence(start_pick_pos, next_target)
+                    # Pass the intermediate point here
+                    demo.trigger_move_sequence(
+                        start_pick_pos, 
+                        next_target, 
+                        intermediate_pos=global_intermediate_point
+                    )
                 
                 else:
                     print("\nMove queue is empty. Demo complete.")
