@@ -70,6 +70,24 @@ class ArmDemo:
         else:
             print(f"Cannot start move. Robot is busy in state: {self.state}")
 
+    def trigger_capture_sequence(self, moving_piece_pos, captured_piece_pos, discard_pos, intermediate_pos=None):
+        """Triggers the state machine to perform a capture sequence."""
+        if self.state == "WAITING":
+            # Store all positions needed for the multi-step operation
+            self.pending_moving_piece_pos = moving_piece_pos
+            self.pending_captured_piece_pos = captured_piece_pos
+            self.pending_discard_pos = discard_pos
+            self.pending_intermediate = intermediate_pos    
+            
+            # Clear other pending vars
+            self.pending_target_1 = None
+            self.pending_target_2 = None
+            
+            self.state = "CAPTURE_PIECE"
+            print(f"Trigger received. State changed to CAPTURE_PIECE.")
+        else:
+            print(f"Cannot start capture. Robot is busy in state: {self.state}")
+
     def update(self):
         if self.state == "WAITING":
             # Robot is idle, do nothing
@@ -95,6 +113,42 @@ class ArmDemo:
             
             print(f"--- MOVE_PIECE state complete. Returning to WAITING state ---")
             self.state = "WAITING"
+
+        elif self.state == "CAPTURE_PIECE":
+            print(f"--- Executing CAPTURE_PIECE (Step 1: Remove Piece) ---")
+            
+            if self.pending_captured_piece_pos is not None and self.pending_discard_pos is not None:
+                # Step 1: Move the captured piece to the discard pile
+                print(f"Capturing piece at {self.pending_captured_piece_pos} and moving to discard {self.pending_discard_pos}")
+                self.move_to_position_with_preferred_arm(
+                    self.pending_captured_piece_pos,
+                    self.pending_discard_pos,
+                    self.pending_intermediate
+                )
+                
+                print(f"--- CAPTURE_PIECE (Step 1) complete. ---")
+                
+                # Now, set up for Step 2: Move the attacking piece
+                print(f"--- Setting up CAPTURE_PIECE (Step 2: Move Attacker) ---")
+                
+                # Set the pending vars for the MOVE_PIECE state
+                self.pending_target_1 = self.pending_moving_piece_pos
+                self.pending_target_2 = self.pending_captured_piece_pos
+                # self.pending_intermediate is already set and will be passed along
+                
+                # Clear the capture-specific vars
+                self.pending_moving_piece_pos = None
+                self.pending_captured_piece_pos = None
+                self.pending_discard_pos = None
+                
+                # CRITICAL: Transition state to MOVE_PIECE to execute Step 2
+                self.state = "MOVE_PIECE" 
+
+            else:
+                print("Error: CAPTURE_PIECE state entered but no targets were set.")
+                self.state = "WAITING" # Bail out to waiting
+            
+            # Note: We do NOT set state to WAITING here. We chain to MOVE_PIECE.
 
     def perform_arm_sequence(self, arm_side, target_pos_1, target_pos_2):
         print(f"\n=== STARTING {arm_side.upper()} ARM SEQUENCE ===")
@@ -283,8 +337,14 @@ if __name__ == "__main__":
     urdf_path = "backend/Testing/Humanoid_URDF_9-10.urdf" 
 
     try:
+        # Ensure ArmDemo is available (Assuming this file is pasted into the main project)
+        # If running standalone, this part would require the 'ArmDemo' class definition.
+        # We assume 'ArmDemo' inherits from 'ArmDemoLogic' in your actual setup.
         demo = ArmDemo(is_real=is_real_robot, urdf_path=urdf_path)
     except FileNotFoundError:
+        sys.exit(1)
+    except NameError:
+        print("Error: 'ArmDemo' class not found. Ensure this logic is mixed into your main class.")
         sys.exit(1)
     except Exception as e:
         print(f"An unexpected error occurred during initialization: {e}")
@@ -292,23 +352,38 @@ if __name__ == "__main__":
 
     print("\n--- Arm Demo State Machine Initialized ---")
     
-    targets_queue = [
-        # # Right-side targets
-        # [-0.131, -0.368, -0.127],
-        # [-0.095, -0.368, -0.127], 
-        # [-0.058, -0.368, -0.127], 
-        # [-0.021, -0.368, -0.127],
-        # # Left-side targets
-        # [0.015, -0.368, -0.127],
-        # [0.052, -0.368, -0.127],
-        # [0.090, -0.368, -0.127],
-        [0.128, -0.368, -0.127]
-    ]
-
-    global_intermediate_point = [0.0, -0.3, -0.127]
-
+    # Define safety defaults for picking positions if not already set
+    if not hasattr(demo, 'left_target_1'):
+        print("Setting default Left Pick Position...")
+        demo.left_target_1 = [0.20, -0.368, -0.127] 
     
-    print(f"Ready to process {len(targets_queue)} moves.")
+    if not hasattr(demo, 'right_target_1'):
+        print("Setting default Right Pick Position...")
+        demo.right_target_1 = [-0.20, -0.368, -0.127]
+
+    # --- Test Setup ---
+    # Define the external intermediate point (e.g. Center of board)
+    global_intermediate_point = [0.0, -0.3, -0.127]
+    # Define a discard point for captured pieces
+    global_discard_point = [0.25, -0.2, -0.1] # e.g., a "captured pieces" box on the left
+
+    # Define a queue of actions to perform:
+    # (ACTION_TYPE, pos_A, pos_B, pos_C)
+    action_queue = [
+        # 1. Test a standard move (cross-board)
+        # ("MOVE", start, end, None)
+        # ("MOVE", demo.left_target_1, [-0.131, -0.368, -0.127], None),
+        
+        # 2. Test a capture (cross-board)
+        # ("CAPTURE", moving_piece_start, captured_piece_pos, discard_pos)
+        ("CAPTURE", demo.left_target_1, [-0.095, -0.368, -0.127], global_discard_point),
+        
+        # 3. Test another standard move (same-side)
+        # ("MOVE", [0.090, -0.368, -0.127], [0.128, -0.368, -0.127], None),
+    ]
+    
+
+    print(f"Ready to process {len(action_queue)} actions.")
 
     try:
         while True:
@@ -316,30 +391,33 @@ if __name__ == "__main__":
 
             if demo.state == "WAITING":   
                 
-                if targets_queue:
-                    next_target = targets_queue.pop(0) 
-                    # Logic to decide start position based on next target
-                    # (Here we alternate or pick based on side just for testing)
-                    if next_target[0] >= 0:
-                        # Target is Left, start from Right (Force Cross-over test)
-                        start_pick_pos = demo.right_target_1
-                    else:
-                        # Target is Right, start from Left (Force Cross-over test)
-                        start_pick_pos = demo.left_target_1
+                if action_queue:
+                    action = action_queue.pop(0) 
+                    action_type = action[0]
                     
-                    # ---------------------------------
-                    print(f"Triggering move sequence: {start_pick_pos} -> {next_target}")
-                    print(f"Passing Intermediate Point: {global_intermediate_point}")
-                    
-                    # Pass the intermediate point here
-                    demo.trigger_move_sequence(
-                        start_pick_pos, 
-                        next_target, 
-                        intermediate_pos=global_intermediate_point
-                    )
+                    if action_type == "MOVE":
+                        pos_1 = action[1]
+                        pos_2 = action[2]
+                        print(f"\n>>> ACTION: MOVE | {pos_1} -> {pos_2}")
+                        demo.trigger_move_sequence(
+                            pos_1, 
+                            pos_2, 
+                            intermediate_pos=global_intermediate_point
+                        )
+                    elif action_type == "CAPTURE":
+                        moving_piece_pos = action[1]
+                        captured_piece_pos = action[2]
+                        discard_pos = action[3]
+                        print(f"\n>>> ACTION: CAPTURE | Attacker at {moving_piece_pos}, Target at {captured_piece_pos}")
+                        demo.trigger_capture_sequence(
+                            moving_piece_pos, 
+                            captured_piece_pos,
+                            discard_pos,
+                            intermediate_pos=global_intermediate_point
+                        )
                 
                 else:
-                    print("\nMove queue is empty. Demo complete.")
+                    print("\nAction queue is empty. Demo complete.")
                     break 
 
     except KeyboardInterrupt:
