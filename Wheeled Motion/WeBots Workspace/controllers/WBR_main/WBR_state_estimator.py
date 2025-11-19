@@ -8,7 +8,7 @@ def state_estimator(self, encoder_in, tilt_in, yaw_in):
         ds = np.sum(dwheel) / 2.0
         dheading = (dwheel[1]-dwheel[0]) / self.wheel_spread
         alpha = 0.005
-        self.velocity[0] = alpha * (ds / self.timestep_s) + (1- alpha)* self.velocity[0]
+        self.velocity[0] = alpha * (ds * self.state_freq) + (1- alpha)* self.velocity[0]
 
         # self.velocity[1] = self.velocity[1] + dheading
         self.velocity[1] = yaw_in

@@ -29,13 +29,15 @@ def balance_controller(self):
     F = -np.dot(K_pos, e)
     net_torque = F * self.wheel_radius
     net_torque = np.clip(net_torque, -self.max_torque, self.max_torque)
-    return net_torque
+    self.update_torque(net_torque)
 
 def update_torque(self, t_in):
-    old_torque = self.torque
-    alpha_max = 0.5
-    k_smoothing = 5
-    alpha_t = alpha_max / (1 + k_smoothing * abs(t_in - old_torque))
-    alpha_t = np.clip(alpha_t, 0.2, alpha_max)
+    # old_torque = self.torque
+    # alpha_max = 0.5
+    # k_smoothing = 5
+    # alpha_t = alpha_max / (1 + k_smoothing * abs(t_in - old_torque))
+    # alpha_t = np.clip(alpha_t, 0.2, alpha_max)
 
-    self.torque = alpha_t * t_in + (1 - alpha_t) * old_torque
+    # self.torque = alpha_t * t_in + (1 - alpha_t) * old_torque
+    self.torque = t_in
+    return

@@ -6,21 +6,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 from webots_interface_class import Webots
 
-def control_loop(interface, robo, velocity_des, current_time):
+#THESE NEED TO BE EVEN FACTORS OF 1000!!!
+state_freq = 200
+balance_freq = 100
+velocity_freq = 10
 
+def run_state(interface, robo, velocity_des, current_time_ms):
     enc_in = interface.read_pos()
     rpy = interface.read_imu()
-
     robo.state_estimator(enc_in, rpy[0], rpy[2])
+    return
 
+def run_balance(interface, robo, velocity_des, current_time_ms):
+    robo.balance_controller()
+    interface.set_wheels_torque(robo.export_wheel_torques())
+    return
+
+def run_velocity(interface, robo, velocity_des, current_time_ms):
     robo.velocity_controller(velocity_des)
+    return
 
-    # run balance controller occasionally
-    if (current_time * 1000) % 5 == 1:
-        torque = robo.balance_controller()
-        robo.update_torque(torque)
-        interface.set_wheels_torque(robo.export_wheel_torques())
-
+def control_loop(interface, robo, velocity_des, current_time_ms):
+    if current_time_ms % int(1000/state_freq) == 1:
+        run_state(interface, robo, velocity_des, current_time_ms)
+    if current_time_ms % int(1000/balance_freq) == 1:
+        run_balance(interface, robo, velocity_des, current_time_ms)
+    if current_time_ms % int(1000/velocity_freq) == 1:
+        run_velocity(interface, robo, velocity_des, current_time_ms)
     return
  
 def plot_all(logs):
@@ -57,7 +69,7 @@ if __name__ == "__main__":
     }
 
     interface = Webots()
-    robo = WBR('fred', interface.timestep)
+    robo = WBR('fred', interface.timestep, state_freq, balance_freq, velocity_freq)
     robo.create_controller()
 
     torque = 0
@@ -74,7 +86,7 @@ if __name__ == "__main__":
 
         velocity_des = velocity_des_list[int(current_time // 5)]
 
-        control_loop(interface, robo, velocity_des, current_time)
+        control_loop(interface, robo, velocity_des, int(current_time*1000))
  
         log["phi"].append(robo.phi[0])
         log["phi_des"].append(robo.phi_des[0])

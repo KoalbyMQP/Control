@@ -1,7 +1,7 @@
 import numpy as np
 
 class WBR:
-    def __init__(self, name, timestep):
+    def __init__(self, name, timestep, state_freq, balance_freq, velocity_freq):
         self.name = name
         self.q = np.array([0, 0, 0])            # (hip, knee, wheel)
         self.position = np.array([0, 0, 0])     # (x, y, theta)
@@ -17,14 +17,17 @@ class WBR:
         self.max_tilt = 0.05
         self.wheel_differential = 0
         self.torque = 0
+        self.state_freq = state_freq
+        self.balance_freq = balance_freq
+        self.velocity_freq = velocity_freq
 
     # Updates phi and dphi
     def update_phi(self, new_phi):
-        self.phi[1] = (new_phi - self.phi[0]) / self.timestep_s
+        self.phi[1] = (new_phi - self.phi[0]) * self.state_freq
         self.phi[0] = new_phi
 
     def update_phi_des(self, new_phi):
-        self.phi_des[1] = (new_phi - self.phi_des[0]) / self.timestep_s
+        self.phi_des[1] = (new_phi - self.phi_des[0]) * self.velocity_freq
         self.phi_des[0] = new_phi
 
     def export_wheel_torques(self):
