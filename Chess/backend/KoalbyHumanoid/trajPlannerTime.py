@@ -11,6 +11,10 @@ class TrajPlannerTime():
         self.accels = accels
 
         self.coeffsArray = self.genCoeffsArray()
+
+    def recalc(self, angles): #recalculates given a new position
+        self.angles = angles
+        self.coeffsArray = self.genCoeffsArray()
         
 
     # Given the initial time, final time, initial position, final
