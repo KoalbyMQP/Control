@@ -6,15 +6,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from webots_interface_class import Webots
 
+velocity_des_list = [
+        np.array([1, 0]), 
+        np.array([1, 3]), 
+        np.array([1, -2]), 
+        np.array([0, 0])
+    ]
+
 #THESE NEED TO BE EVEN FACTORS OF 1000!!!
 state_freq = 200
-balance_freq = 100
+balance_freq = 200
 velocity_freq = 10
 
 def run_state(interface, robo, velocity_des, current_time_ms):
     enc_in = interface.read_pos()
-    rpy = interface.read_imu()
-    robo.state_estimator(enc_in, rpy[0], rpy[2])
+    pitch_in, yaw_in = interface.read_imu()
+    robo.state_estimator(enc_in, pitch_in, yaw_in)
     return
 
 def run_balance(interface, robo, velocity_des, current_time_ms):
@@ -26,13 +33,15 @@ def run_velocity(interface, robo, velocity_des, current_time_ms):
     robo.velocity_controller(velocity_des)
     return
 
+loop_functions = [{"func": run_state,   "freq": 200},
+                  {"func": run_balance, "freq": 200},
+                  {"func": run_velocity,"freq": 10}]
+
 def control_loop(interface, robo, velocity_des, current_time_ms):
-    if current_time_ms % int(1000/state_freq) == 1:
-        run_state(interface, robo, velocity_des, current_time_ms)
-    if current_time_ms % int(1000/balance_freq) == 1:
-        run_balance(interface, robo, velocity_des, current_time_ms)
-    if current_time_ms % int(1000/velocity_freq) == 1:
-        run_velocity(interface, robo, velocity_des, current_time_ms)
+    for item in loop_functions:
+        period_ms = int(1000 / item["freq"])
+        if current_time_ms % period_ms == 1:
+            item["func"](interface, robo, velocity_des, current_time_ms)
     return
  
 def plot_all(logs):
@@ -73,12 +82,7 @@ if __name__ == "__main__":
     robo.create_controller()
 
     torque = 0
-    velocity_des_list = [
-        np.array([0.5, 3]), 
-        np.array([1, 1]), 
-        np.array([1, -1]), 
-        np.array([1, -1])
-    ]
+    
     
 
     while interface.step() != -1:
@@ -92,7 +96,7 @@ if __name__ == "__main__":
         log["phi_des"].append(robo.phi_des[0])
         log["time"].append(current_time)
 
-        if current_time > 15 or abs(robo.phi[0]) > 0.2:
+        if current_time > 19 or abs(robo.phi[0]) > 0.2:
             print("breaking control loop")
             break
 

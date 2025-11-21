@@ -26,7 +26,7 @@ def velocity_controller(self, vel_des):
     required_turn = (required_turn + pi) % (2 * pi) - pi
     # print("required_turn is ", required_turn)
 
-    alpha = 0.7
+    alpha = 1
     omega_des = k_omega * required_turn
 
     max_omega = 0.05 / (1 + alpha * self.velocity[0])

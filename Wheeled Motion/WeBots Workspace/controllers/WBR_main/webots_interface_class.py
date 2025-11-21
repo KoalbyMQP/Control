@@ -47,11 +47,15 @@ class Webots:
     def read_pos(self):
         return np.array([self.encoders[2].getValue(), self.encoders[5].getValue()])
     
+    # Moves 1 timestep in the simulation
     def step(self):
         return self.robot.step(self.timestep)
     
+    # Returns time in seconds
     def get_time(self):
         return self.robot.getTime()
     
+    # Returns pitch, yaw
     def read_imu(self):
-        return self.imu.getRollPitchYaw()
+        rpy = self.imu.getRollPitchYaw()
+        return rpy[0], rpy[2]

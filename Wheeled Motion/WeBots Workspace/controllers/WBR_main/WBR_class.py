@@ -20,6 +20,7 @@ class WBR:
         self.state_freq = state_freq
         self.balance_freq = balance_freq
         self.velocity_freq = velocity_freq
+        self.state_alpha = 1 - np.exp(-2 * np.pi * 1 * (1/state_freq)) # 1 Hz cutoff freq
 
     # Updates phi and dphi
     def update_phi(self, new_phi):
@@ -32,4 +33,4 @@ class WBR:
 
     def export_wheel_torques(self):
         return np.array([self.torque + self.wheel_differential,
-                        self.torque - self.wheel_differential])
+                         self.torque - self.wheel_differential])
