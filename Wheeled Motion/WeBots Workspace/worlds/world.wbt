@@ -1,0 +1,331 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+
+WorldInfo {
+  basicTimeStep 1
+}
+Viewpoint {
+  orientation -0.4078400537494489 0.7502547703782998 0.5203693592845865 0.48274105283960184
+  position -6.162454470993128 -2.214074789836739 2.9723691164697152
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 20 20
+}
+Robot {
+  translation 0 0 0.46
+  children [
+    Solid {
+    }
+    InertialUnit {
+      name "imu"
+    }
+    Shape {
+      appearance DEF base_link_material PBRAppearance {
+        baseColor 0.64706 0.61961 0.58824
+        roughness 1
+        metalness 0
+      }
+      geometry DEF base_link Mesh {
+        url [
+          "C:/Users/wyatt/OneDrive - Worcester Polytechnic Institute (wpi.edu)/MQP/WeBots WBR/URDF/Basic_WBR/meshes/base_link.STL"
+        ]
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 1 -4e-06 -4e-06
+        anchor -0.04 -0.04 -0.065
+      }
+      device [
+        RotationalMotor {
+          name "1"
+          maxTorque 10000
+        }
+        PositionSensor {
+          name "1_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation -0.04 -0.04 -0.065
+        rotation -0.5773496025226482 0.5773516025212713 -0.5773496025226482 2.094399
+        children [
+          Shape {
+            appearance DEF thigh1_material PBRAppearance {
+              baseColor 0.64706 0.61961 0.58824
+              roughness 1
+              metalness 0
+            }
+            geometry DEF thigh1 Mesh {
+              url [
+                "C:/Users/wyatt/OneDrive - Worcester Polytechnic Institute (wpi.edu)/MQP/WeBots WBR/URDF/Basic_WBR/meshes/thigh1.STL"
+              ]
+            }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 0 1
+              anchor 0 0.175 -0.017
+            }
+            device [
+              RotationalMotor {
+                name "2"
+                maxTorque 10000
+              }
+              PositionSensor {
+                name "2_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation 0 0.175 -0.017
+              rotation 0 0 1 3.1408
+              children [
+                Shape {
+                  appearance DEF shin1_material PBRAppearance {
+                    baseColor 0.64706 0.61961 0.58824
+                    roughness 1
+                    metalness 0
+                  }
+                  geometry DEF shin1 Mesh {
+                    url [
+                      "C:/Users/wyatt/OneDrive - Worcester Polytechnic Institute (wpi.edu)/MQP/WeBots WBR/URDF/Basic_WBR/meshes/shin1.STL"
+                    ]
+                  }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 0 0 1
+                    anchor 0 -0.175 -0.017
+                  }
+                  device [
+                    RotationalMotor {
+                      name "3"
+                      maxTorque 10000
+                    }
+                    PositionSensor {
+                      name "3_sensor"
+                    }
+                  ]
+                  endPoint Solid {
+                    translation 0 -0.175 -0.017
+                    rotation 0 0 1 0.0009889999998474485
+                    children [
+                      Shape {
+                        appearance DEF wheel1_material PBRAppearance {
+                          baseColor 0.64706 0.61961 0.58824
+                          roughness 1
+                          metalness 0
+                        }
+                        geometry DEF wheel1 Mesh {
+                          url [
+                            "C:/Users/wyatt/OneDrive - Worcester Polytechnic Institute (wpi.edu)/MQP/WeBots WBR/URDF/Basic_WBR/meshes/wheel1.STL"
+                          ]
+                        }
+                      }
+                    ]
+                    name "wheel1"
+                    boundingObject USE wheel1
+                    physics Physics {
+                      density -1
+                      mass 0.30788
+                      centerOfMass [
+                        0 0 -0.005
+                      ]
+                      inertiaMatrix [
+                        9.6853e-05 9.6853e-05 0.00018857
+                        3.3087e-24 -9.5871e-21 4.6157e-23
+                      ]
+                    }
+                  }
+                }
+              ]
+              name "shin1"
+              boundingObject USE shin1
+              physics Physics {
+                density -1
+                mass 0.65864
+                centerOfMass [
+                  0 -0.0875 -0.0085
+                ]
+                inertiaMatrix [
+                  0.0021188 5.1145e-05 0.0021383
+                  4.6675e-17 4.7805e-21 -2.8774e-20
+                ]
+              }
+            }
+          }
+        ]
+        name "thigh1"
+        boundingObject USE thigh1
+        physics Physics {
+          density -1
+          mass 0.65864
+          centerOfMass [
+            0 0.0875 -0.0085
+          ]
+          inertiaMatrix [
+            0.0021188 5.1145e-05 0.0021383
+            -2.698e-11 4.561e-21 -1.9276e-20
+          ]
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 1 -4e-06 -4e-06
+        anchor 0.04 -0.04 -0.065
+      }
+      device [
+        RotationalMotor {
+          name "4"
+          maxTorque 10000
+        }
+        PositionSensor {
+          name "4_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.04 -0.04 -0.065
+        rotation -0.5773496025226482 0.5773516025212713 -0.5773496025226482 2.094399
+        children [
+          Shape {
+            appearance DEF thigh2_material PBRAppearance {
+              baseColor 0.64706 0.61961 0.58824
+              roughness 1
+              metalness 0
+            }
+            geometry DEF thigh2 Mesh {
+              url [
+                "C:/Users/wyatt/OneDrive - Worcester Polytechnic Institute (wpi.edu)/MQP/WeBots WBR/URDF/Basic_WBR/meshes/thigh2.STL"
+              ]
+            }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 0 1
+              anchor 0 0.175 0.017
+            }
+            device [
+              RotationalMotor {
+                name "5"
+                maxTorque 10000
+              }
+              PositionSensor {
+                name "5_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation 0 0.175 0.017
+              rotation 0 0 1 3.1416
+              children [
+                Shape {
+                  appearance DEF shin2_material PBRAppearance {
+                    baseColor 0.64706 0.61961 0.58824
+                    roughness 1
+                    metalness 0
+                  }
+                  geometry DEF shin2 Mesh {
+                    url [
+                      "C:/Users/wyatt/OneDrive - Worcester Polytechnic Institute (wpi.edu)/MQP/WeBots WBR/URDF/Basic_WBR/meshes/shin2.STL"
+                    ]
+                  }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 0 0 1
+                    anchor 0 -0.175 0.017
+                  }
+                  device [
+                    RotationalMotor {
+                      name "6"
+                      maxTorque 10000
+                    }
+                    PositionSensor {
+                      name "6_sensor"
+                    }
+                  ]
+                  endPoint Solid {
+                    translation 0 -0.175 0.017
+                    children [
+                      Shape {
+                        appearance DEF wheel2_material PBRAppearance {
+                          baseColor 0.64706 0.61961 0.58824
+                          roughness 1
+                          metalness 0
+                        }
+                        geometry DEF wheel2 Mesh {
+                          url [
+                            "C:/Users/wyatt/OneDrive - Worcester Polytechnic Institute (wpi.edu)/MQP/WeBots WBR/URDF/Basic_WBR/meshes/wheel2.STL"
+                          ]
+                        }
+                      }
+                    ]
+                    name "wheel2"
+                    boundingObject USE wheel2
+                    physics Physics {
+                      density -1
+                      mass 0.30788
+                      centerOfMass [
+                        0 0 0.005
+                      ]
+                      inertiaMatrix [
+                        9.6853e-05 9.6853e-05 0.00018857
+                        -1.1011e-51 -1.0717e-20 -1.0412e-37
+                      ]
+                    }
+                  }
+                }
+              ]
+              name "shin2"
+              boundingObject USE shin2
+              physics Physics {
+                density -1
+                mass 0.65864
+                centerOfMass [
+                  0 -0.0875 0.0085
+                ]
+                inertiaMatrix [
+                  0.0021188 5.1145e-05 0.0021383
+                  2.6096e-19 -2.053e-21 -3.3677e-20
+                ]
+              }
+            }
+          }
+        ]
+        name "thigh2"
+        boundingObject USE thigh2
+        physics Physics {
+          density -1
+          mass 0.65864
+          centerOfMass [
+            0 0.0875 0.0085
+          ]
+          inertiaMatrix [
+            0.0021188 5.1145e-05 0.0021383
+            -2.698e-11 4.561e-21 -1.9276e-20
+          ]
+        }
+      }
+    }
+  ]
+  name "BasicWBR"
+  boundingObject USE base_link
+  physics Physics {
+    density -1
+    mass 7.6674
+    centerOfMass [
+      0 -0.04 0.000107
+    ]
+    inertiaMatrix [
+      0.018443 0.018436 0.0081853
+      -5.6469e-22 -2.2502e-19 -7.4366e-19
+    ]
+  }
+  controller "WBR_main"
+}
