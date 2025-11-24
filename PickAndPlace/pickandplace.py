@@ -13,7 +13,8 @@ from ikpy.chain import Chain
 from ikpy.utils import plot as plot_utils
 from Chess.backend.KoalbyHumanoid.RobotKoalby2 import Robot2
 from Chess.backend.KoalbyHumanoid.trajPlannerTime import TrajPlannerTime
-from backend.Testing.pickAndPlaceClass import KoalbyArmController
+from Chess.backend.Testing.pickAndPlaceClass import KoalbyArmController
+from Chess.backend.KoalbyHumanoid.ConfigKoalby2 import Joints
 
 # ------------- Class Definition --------------
 
@@ -23,6 +24,7 @@ class PickAndPlace():
     '''
 
 # -------------- Initialization ---------------
+
     def __init__(self, gripper, urdf_path = 'Control//Chess//backend//KoalbyHumanoid//Simulation Files//Humanoid_URDF_9-10//urdf//Humanoid_URDF_9-10.urdf', is_real = False, debug = False):
         self = self
         self.gripper = Gripper(gripper)                             # The end effector object
@@ -31,6 +33,7 @@ class PickAndPlace():
         self.debug = debug                                          # Motor debug flag              
 
 # ----------------- Methods -------------------
+
     def moveToHome(self):
         '''
             Set the robot to the home position (T-Pose)
@@ -38,30 +41,31 @@ class PickAndPlace():
 
         # Set target position for all relevant motors, joint limits specified
 
-        self.robot.motors[5].target = (math.radians(0), 'P') # shoulder 1 koint - -180 to 180
-        self.robot.motors[6].target = (math.radians(0), 'P') # shoulder 2 joint - 85 sends it down to legs, -90 sends arm above head
-        self.robot.motors[7].target = (math.radians(0), 'P') # Elbow joint - 110 moves towards board, may have overlap with link, -110 works
-        self.robot.motors[8].target = (math.radians(0), 'P') # Forearm joint - 180 to -180 should work
-        self.robot.motors[9].target = (math.radians(0), 'P') # Wrist joint - 90 works, but we don't need it to bend in that angle, -130 is maximum
-        self.robot.motors[10].target = (math.radians(0), 'P') # nothing? will just do -180 to 180
+        self.robot.motors[Joints.shoulderspin_left].target = (math.radians(0), 'P') #shoulder 1 joint - -180 to 180
+        self.robot.motors[Joints.biceplift_left].target = (math.radians(0), 'P') #shoulder 2 joint - 85 sends it down to legs, -90 sends arm above head
+        self.robot.motors[Joints.elbow_left].target = (math.radians(0), 'P') #Elbow joint - 110 moves towards board, may have overlap with link, -110 works
+        self.robot.motors[Joints.wristspin_left].target = (math.radians(0), 'P') #Forearm joint - 180 to -180 should work
+        self.robot.motors[Joints.handcurl_left].target = (math.radians(0), 'P') #Wrist joint - 90 works, but we don't need it to bend in that angle, -130 is maximum
+        self.robot.motors[Joints.gripper_left].target = (math.radians(0), 'P') #nothing? will just do -180 to 180
 
-        self.robot.motors[0].target = (math.radians(0), 'P') #shoulder 1 koint - -180 to 180
-        self.robot.motors[1].target = (math.radians(0), 'P') #shoulder 2 joint - 85 sends it down to legs, -90 sends arm above head
-        self.robot.motors[2].target = (math.radians(0), 'P') #Elbow joint - 110 moves towards board, may have overlap with link, -110 works
-        self.robot.motors[3].target = (math.radians(0), 'P') #Forearm joint - 180 to -180 should work
-        self.robot.motors[4].target = (math.radians(0), 'P') #Wrist joint - 90 works, but we don't need it to bend in that angle, -130 is maximum
-        self.robot.motors[11].target = (math.radians(0), 'P') #nothing? will just do -180 to 180
+        self.robot.motors[Joints.shoulderspin_right].target = (math.radians(0), 'P') #shoulder 1 joint - -180 to 180
+        self.robot.motors[Joints.biceplift_right].target = (math.radians(0), 'P') #shoulder 2 joint - 85 sends it down to legs, -90 sends arm above head
+        self.robot.motors[Joints.elbow_right].target = (math.radians(0), 'P') #Elbow joint - 110 moves towards board, may have overlap with link, -110 works
+        self.robot.motors[Joints.wristspin_right].target = (math.radians(0), 'P') #Forearm joint - 180 to -180 should work
+        self.robot.motors[Joints.handcurl_right].target = (math.radians(0), 'P') #Wrist joint - 90 works, but we don't need it to bend in that angle, -130 is maximum
+        self.robot.motors[Joints.gripper_right].target = (math.radians(0), 'P') #nothing? will just do -180 to 180
         
         if self.debug:
             # Move motors in individually
-            pass
+            for m in range(12):     # only move arm motors (0 - 11)
+                self.robot.moveToTarget(m)
+                time.sleep(1)
 
         else:
             # Move all motors at once
             self.robot.moveAllToTarget()
 
 
-    
     def getCurrentPose(self):
         '''
             Get current joint angles and coordinate position
@@ -69,12 +73,15 @@ class PickAndPlace():
         '''
         # If running in real world, retrieve motor positions and
         # calculate current xyz-coordinate position of end effector
-        if self.robot.is_real:
-            pass
+
+        robot = self.robot
+        gripper = self.gripper
+
+        rot_axis, length, is_open = self.gripper.getGripperInfo()        
         
-        # Else handle same process in simulation
-        else:
-            pass
+        # Get current motor positions
+        for motor in robot.motors:
+            motor.get_position()
 
  
     def calcTrajectory(self):
@@ -141,15 +148,24 @@ class PickAndPlace():
             raise value error, can only use 0 for left arm, 1 for right arm, no other values accepted
         '''
     
-    def actuateGripper(self):
+    def actuateGripper(self, arm):
         '''
-            Open or close the gripper (motors 5 and 11 for current urdf)
+            Open or close the gripper 
         '''
 
-        '''
-        rot_axis, length, is_open = getGripperStatus()
+        # Retrieve whether the gripper is open
+        _, _, is_open = self.gripper.getGripperInfo()
+
         if not is_open:
-            actuate gripper to open
+            if arm == 'left':
+                self.robot.motors[Joints.gripper_left].target = (math.radians(45), 'P')
+
+            elif arm == 'right':
+                self.robot.motors[Joints.gripper_right].target = (math.radians(45), 'P')
         else:
-            actuate gripper to closed
-        '''
+            if arm == 'left':
+                self.robot.motors[Joints.gripper_left].target = (math.radians(0), 'P')
+
+            elif arm == 'right':
+                self.robot.motors[Joints.gripper_right].target = (math.radians(0), 'P')
+
