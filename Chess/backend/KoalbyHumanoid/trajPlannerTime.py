@@ -139,3 +139,4 @@ class TrajPlannerTime():
             poses[jointNum] = sum([coeff*time**index for index, coeff in enumerate(coeffs)])
            ## print(poses)
         return(poses)
+    
