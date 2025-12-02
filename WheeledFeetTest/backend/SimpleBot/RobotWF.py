@@ -309,8 +309,8 @@ class Robot():
 
     def IMUBalance(self, Xtarget, Ytarget, Ztarget):
         imu_data = self.imu_manager.getAllIMUData()
-        print(imu_data)
         torso_imu = imu_data["Torso"]
+        print("IMU:", torso_imu)
         
         # Fuse IMU data
         fused_data = self.fuse_imu_data(torso_imu)

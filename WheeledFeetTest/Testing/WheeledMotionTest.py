@@ -1,91 +1,74 @@
 import sys
+from math import pi
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.SimpleBot.RobotWF import Robot
-import math
-from math import cos, pi, sin
-import numpy as np
 
 if __name__ == "__main__":
-    is_real = False
-    robot = Robot(is_real)
-    
-    # timestep = int(robot.getBasicTimeStep())
-    timestep = 64
-    max_speed = 5
-    
-    motor1 = robot.motors[0]
-    motor2 = robot.motors[1]
-    motors = [motor1, motor2]
-    
-    # ps1 = robot.locatePolygon()
-    
-    # encoders = [ps1]
-    
-    imu_data = robot.imu_manager.getAllIMUData()
-    torso_imu = imu_data["Torso"]
-    initial = torso_imu
-    initial = robot.fuse_imu_data(torso_imu)
-    prevX = initial[0]
-    prevY = initial[1]
-    prevZ = initial[2]
-    
-    # for encoder in encoders:
-    #     encoder.enable(timestep)
-    for motor in motors:
-        print("setting zero position for motor %s" % motor.name)
-        motor.set_position(float('0.0'))
-        motor.set_velocity(0.0)
 
-    def set_wheels_torque(wheel1, wheel2):
-        motors[0].set_torque(wheel1)
-        motors[1].set_torque(wheel2)
-        
-    # def read_pos():
-    #     return np.array([encoders[2].getValue(), encoders[5].getValue()])
-    
-    pose = np.array([0.0, 0.0, pi/2]) # x, y, theta
-    print(pose)
-    enc_last = np.array([0,0])
-    radius = 0.035
-    wheel_spread = 0.158
-    ds = 0
-    dtheta = 0
-    tilt_old = 0
-    k = np.array([-10, -1.2])
-    k_tilt = np.array([0.08, 0.04])
-    xdes = np.array([0, 0])
-    pose_des = np.array([0, 0])
-    pose_old = pose
-    y_old = 0
-    y = 0
-    
-sim = robot.sim
-sim.setStepping(True)
-timestep = sim.getSimulationTimeStep()
+    robot = Robot(is_real=False)
 
-while True:
-    sim.step()
-    current_time = sim.getSimulationTime()
+    # wheel motors
+    WHEEL_R = 0
+    WHEEL_L = 1
+    motorL = robot.motors[WHEEL_L]
+    motorR = robot.motors[WHEEL_R]
 
-    imu_data = robot.imu_manager.getAllIMUData()
-    torso_imu = imu_data["Torso"]
+    # --- ENSURE VELOCITY MODE ---
+    print("\nSetting motors to VELOCITY MODE")
+    for m in (motorL, motorR):
+        m.set_velocity(0.0) # reset target velocity
 
-    newTargetX, newTargetY, newTargetZ = robot.IMUBalance(prevX, prevY, prevZ)
-    r = math.radians(newTargetX)
-    p = math.radians(newTargetY)
-    y = math.radians(newTargetZ)
+    sim = robot.sim
+    sim.setStepping(True)
+    dt = sim.getSimulationTimeStep()
+    print(f"Using dt = {dt}s\n")
 
-    tilt = r
-    dtilt = tilt - tilt_old
+    # Gains for velocity balancing
+    Kp_vel = 15.0      # wheel speed per rad of tilt
+    Kd_vel = 1.0       # wheel speed per rad/s tilt rate
+    max_speed = 15.0   # rad/s wheel speed limit
 
-    x = np.array([tilt, dtilt])
-    e = xdes - x
+    fall_threshold = 5  # rad ≈ 45 degrees
 
-    tau = np.dot(e, k)
+    print("Balancing with wheel VELOCITY control...\n")
 
-    motor1.set_torque(tau)
-    motor2.set_torque(tau)
+    try:
+        while True:
+            sim.step()
+            t = sim.getSimulationTime()
 
-    # enc_l = left_encoder.getValue()
-    # enc_r = right_encoder.getValue()
+            imu_data = robot.imu_manager.getAllIMUData()
+            ax, ay, az, gx, gy, gz = imu_data["Torso"]
+
+            # IMU interpretation
+            tilt = ax       # pitch angle
+            tilt_rate = gy  # pitch rate
+
+            # fall detection
+            if abs(tilt) > fall_threshold:
+                print("Robot fell!")
+                break
+
+            # PD Velocity Balancing
+            forward_speed = (Kp_vel * tilt + Kd_vel * tilt_rate)
+
+            # clamp to max speed
+            forward_speed = max(-max_speed, min(max_speed, forward_speed))
+
+            # send wheel velocities
+            motorL.set_velocity(forward_speed)
+            motorR.set_velocity(forward_speed)
+
+            print(f"t={t:.2f} | tilt={tilt:.4f} | dtilt={tilt_rate:.4f} | cmd_vel={forward_speed:.2f}")
+
+    except KeyboardInterrupt:
+        print("Stopped by user.")
+
+    finally:
+        try: sim.stopSimulation()
+        except: pass
+        try:
+            if hasattr(robot, "client") and robot.client:
+                robot.client.__del__()
+        except: pass
