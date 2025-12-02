@@ -3,7 +3,7 @@ arduino which directly controls the motors"""
 import time
 import math
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
-from backend.PID import PID
+from backend.SimpleBot.PID import PID
 
 class Motor():
     def __init__(self, is_real, motor_id, name, twist, M, angle_limit=None, serial=None, pidGains=None, sim=None, handle=None):

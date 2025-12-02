@@ -3,15 +3,15 @@ import time
 import math
 import numpy as np
 
-import backend.ConfigWF as Config
+import backend.SimpleBot.ConfigWF as Config
 import modern_robotics as mr
-from backend.Link import Link
-from backend.PID import PID
-from backend.ArduinoSerial import ArduinoSerial
-from backend.Motor import Motor
+from backend.SimpleBot.Link import Link
+from backend.SimpleBot.PID import PID
+from backend.SimpleBot.ArduinoSerial import ArduinoSerial
+from backend.SimpleBot.Motor import Motor
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
-import backend.poe as poe
-from backend.IMU import IMU, IMUManager
+import backend.SimpleBot.poe as poe
+from backend.SimpleBot.IMU import IMU, IMUManager
 # from backend.KoalbyHumanoid.Electromagnet import Electromagnet
 
 TIME_BETWEEN_MOTOR_CHECKS = 2
@@ -88,35 +88,8 @@ class Robot():
 
     def chain_init(self):
         chain = {
-            self.motors[24].name:self.motors[23],
-            self.motors[23].name:self.motors[22],
-            self.motors[22].name:self.motors[21],
-            self.motors[21].name:self.motors[20],
-            self.motors[20].name:self.motors[10],
-
-            self.motors[19].name:self.motors[18],
-            self.motors[18].name:self.motors[17],
-            self.motors[17].name:self.motors[16],
-            self.motors[16].name:self.motors[15],
-            self.motors[15].name:self.motors[10],
-
-            self.motors[10].name:self.motors[13],
-            self.motors[13].name:self.motors[12],
-            self.motors[12].name:self.motors[14],
-            self.motors[14].name:self.motors[11],
-            self.motors[11].name:"base",
-
-            self.motors[4].name:self.motors[3],
-            self.motors[3].name:self.motors[2],
-            self.motors[2].name:self.motors[1],
             self.motors[1].name:self.motors[0],
-            self.motors[0].name:"base",
-
-            self.motors[9].name:self.motors[8],
-            self.motors[8].name:self.motors[7],
-            self.motors[7].name:self.motors[6],
-            self.motors[6].name:self.motors[5],
-            self.motors[5].name:"base"
+            self.motors[0].name:"base"
         }
         return chain
     
@@ -261,12 +234,12 @@ class Robot():
         locations = []
         rightAnkleM = [[1,0,0,-43.49],[0,1,0,659.84],[0,0,1,70.68],[1,0,0,0]]
         leftAnkleM = [[1,0,0,43.49],[0,1,0,659.84],[0,0,1,70.68],[1,0,0,0]]
-        rightAnkleMotor = self.motors[Config.Joints.ankle_right.value]
-        leftAnkleMotor = self.motors[Config.Joints.ankle_left.value]
+        rightWheelMotor = self.motors[Config.Joints.wheel_right.value]
+        leftWheelMotor = self.motors[Config.Joints.wheel_left.value]
         Ms = [rightAnkleM, leftAnkleM]
-        ankleMotors = [rightAnkleMotor, leftAnkleMotor]
-        for i in range(len(ankleMotors)):
-            motor = ankleMotors[i]
+        wheelMotors = [rightWheelMotor, leftWheelMotor]
+        for i in range(len(wheelMotors)):
+            motor = wheelMotors[i]
             M = Ms[i]
             slist.append(motor.twist)
             thetaList.append(motor.get_position())
@@ -318,7 +291,7 @@ class Robot():
 
     # methods to balance (unassisted standing)
      # Fuse IMU data from right_chest_imu, left_chest_imu and torso_imu
-    def fuse_imu_data(self, right_chest_imu, left_chest_imu):
+    def fuse_imu_data(self,torso_imu):
         """
         Fuses the IMU data from right chest, left chest, and torso.
 
@@ -330,19 +303,17 @@ class Robot():
         Returns:
             np.array: Fused [pitch, roll, yaw] data for PID controller input.
         """
-        self.fused_imu = np.mean([right_chest_imu, left_chest_imu], axis=0)
+        self.fused_imu = np.mean([torso_imu], axis=0)
         return self.fused_imu
 
 
     def IMUBalance(self, Xtarget, Ytarget, Ztarget):
         imu_data = self.imu_manager.getAllIMUData()
         print(imu_data)
-        right_chest_imu = imu_data["RightChest"]
-        left_chest_imu = imu_data["LeftChest"]
-        # torso_imu = imu_data["Torso"]
+        torso_imu = imu_data["Torso"]
         
         # Fuse IMU data
-        fused_data = self.fuse_imu_data(right_chest_imu, left_chest_imu)
+        fused_data = self.fuse_imu_data(torso_imu)
         
         # Use the fused data for balance calculations
         xRot = fused_data[0]

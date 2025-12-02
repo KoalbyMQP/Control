@@ -2,7 +2,7 @@ import modern_robotics as mr
 import numpy as np
 import math
 import sys
-import backend.ConfigWF as ConfigWF
+import backend.SimpleBot.ConfigWF as ConfigWF
 sys.path.append("./")
 
 def rodriguez(twist, theta):
