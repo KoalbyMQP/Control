@@ -32,6 +32,8 @@ class Webots:
         for motor in self.motors:
             motor.setPosition(float('inf'))
             motor.setVelocity(0.0)
+
+        self.error_flag = False
         
     # def set_hips_position(self, hip1, hip2):
     #     self.motors[0].setPosition(hip1)
@@ -49,7 +51,9 @@ class Webots:
     
     # Moves 1 timestep in the simulation
     def step(self):
-        return self.robot.step(self.timestep)
+        temp = self.robot.step(self.timestep)
+        if temp == -1:
+            self.error_flag = True
     
     # Returns time in seconds
     def get_time(self):

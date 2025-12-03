@@ -5,6 +5,7 @@ from WBR_merge import WBR
 import numpy as np
 import matplotlib.pyplot as plt
 from webots_interface_class import Webots
+from test_rig_interface_class import TestRig
 
 velocity_des_list = [
         np.array([1, 0]), 
@@ -33,15 +34,15 @@ def run_velocity(interface, robo, velocity_des, current_time_ms):
     robo.velocity_controller(velocity_des)
     return
 
-loop_functions = [{"func": run_state,   "freq": 200},
-                  {"func": run_balance, "freq": 200},
-                  {"func": run_velocity,"freq": 10}]
+loop_functions = [{"func": run_state,   "freq": 200, "next_time_ms": 0},
+                  {"func": run_balance, "freq": 200, "next_time_ms": 0},
+                  {"func": run_velocity,"freq": 10,  "next_time_ms": 0}]
 
 def control_loop(interface, robo, velocity_des, current_time_ms):
     for item in loop_functions:
-        period_ms = int(1000 / item["freq"])
-        if current_time_ms % period_ms == 1:
-            item["func"](interface, robo, velocity_des, current_time_ms)
+        if current_time_ms >= item["next_time_ms"]:                         # If overdue
+            item["func"](interface, robo, velocity_des, current_time_ms)    # Run Function
+            item["next_time_ms"] += 1000 / item["freq"]                     # Schedule next 
     return
  
 def plot_all(logs):
@@ -83,14 +84,14 @@ if __name__ == "__main__":
 
     torque = 0
     
-    
+    while not interface.error_flag:
 
-    while interface.step() != -1:
+        interface.step()
         current_time = interface.get_time()
 
-        velocity_des = velocity_des_list[int(current_time // 5)]
+        velocity_desired = velocity_des_list[int(current_time // 5)]
 
-        control_loop(interface, robo, velocity_des, int(current_time*1000))
+        control_loop(interface, robo, velocity_desired, int(current_time*1000))
  
         log["phi"].append(robo.phi[0])
         log["phi_des"].append(robo.phi_des[0])
