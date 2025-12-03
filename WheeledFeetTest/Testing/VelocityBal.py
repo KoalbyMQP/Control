@@ -1,5 +1,5 @@
 import sys
-from math import pi
+from math import pi, atan2, degrees
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from backend.SimpleBot.RobotWF import Robot
@@ -25,11 +25,17 @@ if __name__ == "__main__":
     print(f"Using dt = {dt}s\n")
 
     # Gains for velocity balancing
-    Kp_vel = 15.0      # wheel speed per rad of tilt
-    Kd_vel = 1.0       # wheel speed per rad/s tilt rate
-    max_speed = 15.0   # rad/s wheel speed limit
+    Kp_vel = 150.0
+    Kd_vel = 25.0
+    max_speed = 400.0
 
-    fall_threshold = 5  # rad ≈ 45 degrees
+
+    fall_threshold = 150
+
+    imu_data = robot.imu_manager.getAllIMUData()
+    ax, ay, az, gx, gy, gz = imu_data["Torso"]
+    tilt = atan2(ax, az)    # initial pitch angle estimate (radians)
+
 
     print("Balancing with wheel VELOCITY control...\n")
 
@@ -41,12 +47,18 @@ if __name__ == "__main__":
             imu_data = robot.imu_manager.getAllIMUData()
             ax, ay, az, gx, gy, gz = imu_data["Torso"]
 
-            # IMU interpretation
-            tilt = ax       # pitch angle
-            tilt_rate = gy  # pitch rate
+            # # IMU interpretation
+            # tilt = ax       # pitch angle
+            # tilt_rate = gy  # pitch rate
 
-            # fall detection
-            if abs(tilt) > fall_threshold:
+            alpha = 0.98     # complementary filter
+            tilt_acc = atan2(ax, az)
+            tilt_rate = gy
+            tilt = alpha * (tilt + tilt_rate * dt) + (1 - alpha) * tilt_acc
+
+            tilt_degrees = degrees(tilt)
+            print(tilt_degrees)
+            if abs(tilt_degrees) > fall_threshold: # fall_threshold is 5 (degrees in this context)
                 print("Robot fell!")
                 break
 
@@ -60,7 +72,7 @@ if __name__ == "__main__":
             motorL.set_velocity(forward_speed)
             motorR.set_velocity(forward_speed)
 
-            print(f"t={t:.2f} | tilt={tilt:.4f} | dtilt={tilt_rate:.4f} | cmd_vel={forward_speed:.2f}")
+           # print(f"t={t:.2f} | tilt={tilt:.4f} | dtilt={tilt_rate:.4f} | cmd_vel={forward_speed:.2f}")
 
     except KeyboardInterrupt:
         print("Stopped by user.")

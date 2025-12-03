@@ -90,8 +90,8 @@ class Motor():
     def enable_torque_mode_sim(self):
         if self.is_real:
             raise Exception("Not for real motor")
-        self.sim.setJointMode(self.handle, self.sim.jointmode_force, 0)
         self.sim.setJointTargetVelocity(self.handle, 0)
+        self.sim.setJointMode(self.handle, self.sim.jointmode_force, 0)
 
     def set_torque_sim(self, torque):
         if self.is_real:
@@ -99,7 +99,6 @@ class Motor():
 
         # ensure force mode
         self.sim.setJointMode(self.handle, self.sim.jointmode_force, 0)
-
         # send torque
         self.sim.setJointTargetForce(self.handle, torque)
 
