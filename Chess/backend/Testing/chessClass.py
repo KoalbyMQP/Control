@@ -10,12 +10,12 @@ from backend.Testing.pickAndPlaceClass import KoalbyArmController
 
 class ArmDemo:
     def __init__(self, is_real=False, urdf_path="backend/Testing/Humanoid_URDF-9-10.urdf"):
-        print("--- Initializing Controller ---")
         self.controller = KoalbyArmController(is_real=is_real, urdf_path=urdf_path)
     
-        self.trajectory_duration = 1
+        self.trajectory_duration = 3
         self.ik_threshold = 3.0
         self.target_orientation = np.array([0, -1, 1])
+        # self.target_orientation = np.array([-0.7, -0.2, 0.68])
 
         self.left_end_effector_start_pos = [0.49634, -0.06063, 0.03032]
         self.right_end_effector_start_pos = [-0.49634, -0.04137, 0.03032]
@@ -24,9 +24,8 @@ class ArmDemo:
         self.left_target_2 = [0.128, -0.368, -0.127]
         self.right_target_1 = [-0.131, -0.175, -0.127]
         self.right_target_2 = [-0.131, -0.368, -0.127]
-        # --------------------------------
 
-        self.state = "WAITING"  # Initial state
+        self.state = "WAITING" 
         self.pending_target_1 = None
         self.pending_target_2 = None
 
@@ -51,13 +50,56 @@ class ArmDemo:
 
             self.home_ik_solution_left = list(self.controller.ik_solution_left)
             self.home_ik_solution_right = list(self.controller.ik_solution_right)
-            # -----------------------------------------------
 
             print("Initial IK guesses updated and home IK solutions stored. Robot is in WAITING state.")
         except Exception as e:
             print(f"Error during initial IK calculation: {e}")
             print("Please check URDF path and start positions.")
             sys.exit(1)
+
+    def debug_end_effector_frame(self, arm_side):
+        """
+        Calculates and prints the orientation of the End Effector 
+        based on the CURRENT IK solution stored in the controller.
+        """
+        if arm_side == 'left':
+            chain = self.controller.left_arm_chain
+            joints = self.controller.ik_solution_left
+        else:
+            chain = self.controller.right_arm_chain
+            joints = self.controller.ik_solution_right
+
+        # 1. Get Forward Kinematics (4x4 Matrix)
+        fk_matrix = chain.forward_kinematics(joints)
+        
+        # 2. Extract Rotation Matrix (3x3)
+        # Columns correspond to the Local X, Y, Z axes projected onto the World
+        rot_matrix = fk_matrix[:3, :3]
+        
+        # 3. Calculate Euler Angles (Roll, Pitch, Yaw) from Rotation Matrix
+        # Standard calculation (assuming sequence R_z * R_y * R_x)
+        sy = math.sqrt(rot_matrix[0,0] * rot_matrix[0,0] +  rot_matrix[1,0] * rot_matrix[1,0])
+        singular = sy < 1e-6
+
+        if not singular:
+            x = math.atan2(rot_matrix[2,1] , rot_matrix[2,2])
+            y = math.atan2(-rot_matrix[2,0], sy)
+            z = math.atan2(rot_matrix[1,0], rot_matrix[0,0])
+        else:
+            x = math.atan2(-rot_matrix[1,2], rot_matrix[1,1])
+            y = math.atan2(-rot_matrix[2,0], sy)
+            z = 0
+
+        rpy_deg = np.round([math.degrees(x), math.degrees(y), math.degrees(z)], 2)
+        
+        print(f"\n[DEBUG FRAME] {arm_side.upper()} Arm Analysis:")
+        print(f"  Target Position (XYZ): {np.round(fk_matrix[:3, 3], 3)}")
+        print(f"  Euler Angles (RPY):    {rpy_deg}")
+        print(f"  Basis Vectors (World Coords):")
+        print(f"    X-Axis (Red):   {np.round(rot_matrix[:, 0], 2)}")
+        print(f"    Y-Axis (Green): {np.round(rot_matrix[:, 1], 2)} <--- Usually Finger Open/Close Dir")
+        print(f"    Z-Axis (Blue):  {np.round(rot_matrix[:, 2], 2)} <--- Usually Approach Dir")
+        print("---------------------------------------------------\n")
 
     def trigger_move_sequence(self, target_pos_1, target_pos_2, intermediate_pos=None):
         """Triggers the state machine to perform a move sequence."""
@@ -165,10 +207,29 @@ class ArmDemo:
         else:
             raise ValueError("arm_side must be 'left' or 'right'")
 
-        intermediate_pos_1 = [target_pos_1[0], target_pos_1[1], target_pos_1[2] + 0.05]
-        intermediate_pos_2 = [target_pos_2[0], target_pos_2[1], target_pos_2[2] + 0.05]
+        # intermediate_pos_1 = [target_pos_1[0]+0.02, target_pos_1[1]-0.05, target_pos_1[2] + 0.05]
+        # Intermediate Offsets (necessary since task space traverses to joint location not EE location)
+        x_intermediate_offset = 0.01
+        y_intermediate_offset = 0.02
+        z_intermediate_offset = 0.05
+        # Target offsets (necessary since task space traverses to joint location not EE location)
+        z_target_offset = 0.04
+        intermediate_pos_1 = [target_pos_1[0]+x_intermediate_offset, target_pos_1[1]+y_intermediate_offset, target_pos_1[2]+z_intermediate_offset]
+        intermediate_pos_2 = [target_pos_2[0]+x_intermediate_offset, target_pos_2[1]+y_intermediate_offset, target_pos_2[2]+z_intermediate_offset]
+
+        target_pos_1 = [target_pos_1[0]+x_intermediate_offset, target_pos_1[1]+y_intermediate_offset, target_pos_1[2]+z_target_offset]
+        target_pos_2 = [target_pos_2[0]+x_intermediate_offset, target_pos_2[1]+y_intermediate_offset, target_pos_2[2]+z_target_offset]
 
         current_pos_at_start = current_fk[:3, 3]
+
+        self.controller.set_shoulder(arm_side, value=math.radians(-180))
+
+        current_seed = self.controller.ik_solution_left if arm_side == 'left' else self.controller.ik_solution_right
+        
+        # Convert to degrees for easier reading and print
+        # Index 1 is usually the Shoulder Spin
+        print(f"\n[DEBUG] Current IK Seed (Degrees): {np.round(np.degrees(current_seed), 1)}")
+        print(f"[DEBUG] Shoulder Spin (Idx 1) is: {math.degrees(current_seed[0]):.2f}°")
 
         print("Step 1: Moving to Intermediate 1")
         _, _ = self.controller.execute_arm_trajectory(
@@ -177,8 +238,11 @@ class ArmDemo:
             end_pos=intermediate_pos_1,
             duration=self.trajectory_duration,
             target_orientation=target_orientation,
-            ik_threshold=self.ik_threshold
+            ik_threshold=self.ik_threshold,
+            orientation_mode=None
         )
+    
+        self.controller.open_gripper(arm_side)
         
         print("Step 2: Moving to Target 1")
         _, _ = self.controller.execute_arm_trajectory(
@@ -187,8 +251,15 @@ class ArmDemo:
             end_pos=target_pos_1,
             duration=self.trajectory_duration,
             target_orientation=target_orientation,
-            ik_threshold=self.ik_threshold
+            ik_threshold=self.ik_threshold,
+            orientation_mode=None
         )
+
+        self.debug_end_effector_frame(arm_side)
+
+        time.sleep(5)
+
+        self.controller.close_gripper(arm_side)
 
         print("Step 3: Lifting from Target 1")
         _, _ = self.controller.execute_arm_trajectory(
@@ -197,7 +268,8 @@ class ArmDemo:
             end_pos=intermediate_pos_1,
             duration=self.trajectory_duration,
             target_orientation=target_orientation,
-            ik_threshold=self.ik_threshold
+            ik_threshold=self.ik_threshold,
+            orientation_mode=None
         )
 
         print("Step 4: Moving to Intermediate 2")
@@ -207,7 +279,8 @@ class ArmDemo:
             end_pos=intermediate_pos_2,
             duration=self.trajectory_duration,
             target_orientation=target_orientation,
-            ik_threshold=self.ik_threshold
+            ik_threshold=self.ik_threshold,
+            orientation_mode=None
         )
 
         print("Step 5: Moving to Target 2")
@@ -217,8 +290,12 @@ class ArmDemo:
             end_pos=target_pos_2,
             duration=self.trajectory_duration,
             target_orientation=target_orientation,
-            ik_threshold=self.ik_threshold
+            ik_threshold=self.ik_threshold,
+            orientation_mode=None
         )
+
+        print(f"Action: Opening {arm_side} gripper (Place)")
+        self.controller.open_gripper(arm_side)
 
         print("Step 6: Lifting from Target 2")
         _, _ = self.controller.execute_arm_trajectory(
@@ -227,7 +304,8 @@ class ArmDemo:
             end_pos=intermediate_pos_2,
             duration=self.trajectory_duration,
             target_orientation=target_orientation,
-            ik_threshold=self.ik_threshold
+            ik_threshold=self.ik_threshold,
+            orientation_mode=None
         )
 
         print("Step 7: Returning to Home Position (Smoothly)")
@@ -237,7 +315,8 @@ class ArmDemo:
             end_pos=home_pos, # <-- Use the defined home_pos, not 'start_pos'
             duration=self.trajectory_duration,
             target_orientation=target_orientation, # Use the defined home orientation
-            ik_threshold=self.ik_threshold
+            ik_threshold=self.ik_threshold,
+            orientation_mode=None
         )
 
         print(f"Step 8: Resynchronizing {arm_side} arm state to 'home' IK solution.")
@@ -374,12 +453,13 @@ if __name__ == "__main__":
         # ("MOVE", start, end, None)
         # ("MOVE", demo.left_target_1, [-0.131, -0.368, -0.127], None),
         
-        # 2. Test a capture (cross-board)
-        # ("CAPTURE", moving_piece_start, captured_piece_pos, discard_pos)
-        ("CAPTURE", demo.left_target_1, [-0.095, -0.368, -0.127], global_discard_point),
+        # # 2. Test a capture (cross-board)
+        # # ("CAPTURE", moving_piece_start, captured_piece_pos, discard_pos)
+        # ("CAPTURE", demo.left_target_1, [-0.095, -0.368, -0.127], global_discard_point),
         
-        # 3. Test another standard move (same-side)
+        # # 3. Test another standard move (same-side)
         # ("MOVE", [0.090, -0.368, -0.127], [0.128, -0.368, -0.127], None),
+        ("MOVE", [-0.11, -0.30, -0.126], [0.06, -0.3, -0.167], None),
     ]
     
 
