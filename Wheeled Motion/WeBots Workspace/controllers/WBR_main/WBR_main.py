@@ -4,19 +4,19 @@ print("Webots Python path:", sys.executable)
 from WBR_merge import WBR
 import numpy as np
 import matplotlib.pyplot as plt
-from webots_interface_class import Webots
+# from webots_interface_class import Webots
 from test_rig_interface_class import TestRig
 
 velocity_des_list = [
-        np.array([1, 0]), 
-        np.array([1, 3]), 
-        np.array([1, -2]), 
+        np.array([0, 0]), 
+        np.array([0, 0]), 
+        np.array([0, 0]), 
         np.array([0, 0])
     ]
 
 #THESE NEED TO BE EVEN FACTORS OF 1000!!!
-state_freq = 200
-balance_freq = 200
+state_freq = 100
+balance_freq = 100
 velocity_freq = 10
 
 def run_state(interface, robo, velocity_des, current_time_ms):
@@ -34,15 +34,17 @@ def run_velocity(interface, robo, velocity_des, current_time_ms):
     robo.velocity_controller(velocity_des)
     return
 
-loop_functions = [{"func": run_state,   "freq": 200, "next_time_ms": 0},
-                  {"func": run_balance, "freq": 200, "next_time_ms": 0},
-                  {"func": run_velocity,"freq": 10,  "next_time_ms": 0}]
+# loop_functions = [{"func": run_state,   "freq": 200, "next_time_ms": 0},
+#                   {"func": run_balance, "freq": 200, "next_time_ms": 0},
+#                   {"func": run_velocity,"freq": 10,  "next_time_ms": 0}]
+loop_functions = [{"func": run_state,   "freq": state_freq, "next_time_ms": 0},
+                  {"func": run_balance, "freq": balance_freq, "next_time_ms": 0}]
 
 def control_loop(interface, robo, velocity_des, current_time_ms):
     for item in loop_functions:
         if current_time_ms >= item["next_time_ms"]:                         # If overdue
             item["func"](interface, robo, velocity_des, current_time_ms)    # Run Function
-            item["next_time_ms"] += 1000 / item["freq"]                     # Schedule next 
+            item["next_time_ms"] = current_time_ms + 1000 / item["freq"]                     # Schedule next 
     return
  
 def plot_all(logs):
@@ -78,7 +80,7 @@ if __name__ == "__main__":
         "time": []
     }
 
-    interface = Webots()
+    interface = TestRig()
     robo = WBR('fred', interface.timestep, state_freq, balance_freq, velocity_freq)
     robo.create_controller()
 
@@ -89,7 +91,8 @@ if __name__ == "__main__":
         interface.step()
         current_time = interface.get_time()
 
-        velocity_desired = velocity_des_list[int(current_time // 5)]
+        # velocity_desired = velocity_des_list[int(current_time // 5)]
+        velocity_desired = velocity_des_list[0]
 
         control_loop(interface, robo, velocity_desired, int(current_time*1000))
  
@@ -97,9 +100,9 @@ if __name__ == "__main__":
         log["phi_des"].append(robo.phi_des[0])
         log["time"].append(current_time)
 
-        if current_time > 19 or abs(robo.phi[0]) > 0.2:
-            print("breaking control loop")
-            break
+        # if current_time > 19 or abs(robo.phi[0]) > 0.2:
+            # print("breaking control loop")
+            # break
 
     plot_all(log)
 

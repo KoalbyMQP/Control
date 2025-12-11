@@ -3,8 +3,8 @@ import serial
 import threading
 import time
 
-class RealRobotInterface:
-    def __init__(self, port="/dev/ttyUSB0", baud=460800):
+class TestRig:
+    def __init__(self, port="COM9", baud=115200):
         # ---- Connection ----
         self.ser = serial.Serial(port, baud, timeout=0.01)
 
@@ -13,6 +13,7 @@ class RealRobotInterface:
         self.pitch = 0.0
         self.yaw = 0.0
         self.timestamp = 0.0
+        self.timestep = 1
 
         self.error_flag = False
         self.running = True
@@ -25,29 +26,29 @@ class RealRobotInterface:
     # LISTENER THREAD – continuously receives streaming packets
     # ------------------------------------------------
     def _listen_loop(self):
-        """
-        Expected ESP32 packet format (one line):
-        ENC1,ENC2,PITCH,YAW,TIME\n
-        Example:
-        1234,1240,-0.03,0.14,12.712
-        """
         buffer = ""
 
         while self.running:
             try:
+                # Read and decode incoming data
                 incoming = self.ser.read(128).decode(errors='ignore')
                 if not incoming:
                     continue
 
                 buffer += incoming
 
-                # process full lines
-                while "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
-                    self._parse_packet(line)
-
-            except Exception as e:
-                print("Serial error:", e)
+                if "\n" in buffer:
+                    
+                    parts = buffer.rsplit("\n", 2)
+                    
+                    if len(parts) >= 2:
+                        # Get latest complete line and update the buffer (trailer)
+                        line_to_process = parts[-2]
+                        buffer = parts[-1] 
+                        
+                        self._parse_packet(line_to_process)
+                    
+            except Exception:
                 self.error_flag = True
 
     def _parse_packet(self, line):
@@ -56,10 +57,11 @@ class RealRobotInterface:
             if len(parts) != 5:
                 return
 
-            e1, e2, pitch, yaw, ts = parts
+            e_right, e_left, pitch, yaw, ts = parts
+            print(f"new pitch is {pitch}")
 
-            self.pos = np.array([float(e1), float(e2)])
-            self.pitch = float(pitch)
+            self.pos = np.array([float(e_right), float(e_left)])
+            self.pitch = float(pitch) + 90
             self.yaw = float(yaw)
             self.timestamp = float(ts)
 
@@ -75,8 +77,9 @@ class RealRobotInterface:
         Expected packet format:
         T,torqueL,torqueR\n
         """
+        print(f"sending torque command {torques}")
         tL, tR = torques
-        msg = f"T,{tL:.5f},{tR:.5f}\n"
+        msg = f"T,{tL:.2f},{tR:.2f}\n"
         self.ser.write(msg.encode())
 
     # ------------------------------------------------
@@ -86,7 +89,8 @@ class RealRobotInterface:
         return self.pos.copy()
 
     def read_imu(self):
-        return self.pitch, self.yaw
+        conv = np.pi / 180
+        return self.pitch * conv, self.yaw * conv
 
     # ------------------------------------------------
     # API: TIME + STEP

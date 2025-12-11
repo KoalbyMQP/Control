@@ -6,7 +6,7 @@ def create_controller(self, M=1.0, m=0.2, l=0.5, I=0.006, b=0.1, g=9.81,
     
     # Default LQR weights
     if Q is None:
-        Q = np.diag([0, 0, 100, 10])
+        Q = np.diag([0, 0, 100, 1])
     if R is None:
         R = np.array([[1]])
 
@@ -16,6 +16,11 @@ def create_controller(self, M=1.0, m=0.2, l=0.5, I=0.006, b=0.1, g=9.81,
     K, S, E = control.lqr(A, B, Q, R)
 
     self.K = K
+
+    K[0,0:4] = np.array([0, 0, 50, 0])
+    self.K = K
+    print(f"OVERWRITING GAINS TO {K}")
+
 
     return K
 

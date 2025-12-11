@@ -13,7 +13,7 @@ class WBR:
         self.mass = 10
         self.wheel_radius = 0.035
         self.wheel_spread = 0.158
-        self.max_torque = 0.3
+        self.max_torque = 0.5
         self.max_tilt = 0.05
         self.wheel_differential = 0
         self.torque = 0
