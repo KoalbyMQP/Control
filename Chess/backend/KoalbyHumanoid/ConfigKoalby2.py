@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 '''Array of all motors for Koalby.'''
 
-from enum import Enum
+from enum import IntEnum
 
 
-class Joints(Enum):
+class Joints(IntEnum):
     shoulderspin_right = 0
     biceplift_right = 1
     elbow_right = 2
