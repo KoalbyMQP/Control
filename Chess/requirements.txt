@@ -10,3 +10,5 @@ pyzmq
 cbor
 cbor2 
 ikpy
+setuptools
+wheel

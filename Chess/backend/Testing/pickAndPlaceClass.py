@@ -7,6 +7,7 @@ sys.path.append("./")
 from backend.KoalbyHumanoid.RobotKoalby2 import Robot2
 from backend.KoalbyHumanoid.trajPlannerTime import TrajPlannerTime
 from backend.KoalbyHumanoid.ConfigKoalby2 import Joints
+from backend.KoalbyHumanoid.ConfigKoalby2 import Joints
 
 
 class KoalbyArmController:
@@ -117,10 +118,13 @@ class KoalbyArmController:
         print("KoalbyArmController setup complete.")
 
     def set_gripper(self, arm_side, value):
-        """Manually sets gripper target and updates internal state."""
+        """
+        Manually sets gripper target and updates internal state.
+        """
         self.gripper_states[arm_side] = value
         
         if arm_side == "left":
+            motor_idx = Joints.gripper_left
             motor_idx = Joints.gripper_left
         else: 
             motor_idx = Joints.gripper_right
@@ -143,8 +147,10 @@ class KoalbyArmController:
         
         if arm_side == "left":
             motor_id = Joints.shoulderspin_left
+            motor_id = Joints.shoulderspin_left
             self.ik_solution_left[ik_index] = value
         elif arm_side == "right":
+            motor_id = Joints.shoulderspin_right
             motor_id = Joints.shoulderspin_right
             self.ik_solution_right[ik_index] = value
         else:
@@ -207,15 +213,18 @@ class KoalbyArmController:
 
     def execute_arm_trajectory(self, arm_side, start_pos, end_pos, duration, 
                                target_orientation, ik_threshold=None, check_joint_limits = False, safety_margin=0.01, orientation_mode="Y"):
+        
         if arm_side == "left":
             chain = self.left_arm_chain
             motor_ids = self.MOTOR_ID_MAP["left"]
             ik_solution_prev = self.ik_solution_left
             print("IK Solution Prev:", ik_solution_prev)
+
         elif arm_side == "right":
             chain = self.right_arm_chain
             motor_ids = self.MOTOR_ID_MAP["right"]
             ik_solution_prev = self.ik_solution_right
+
         else:
             raise ValueError("arm_side must be 'left' or 'right'")
 
@@ -232,6 +241,7 @@ class KoalbyArmController:
                                            arm_traj_params[1],
                                            arm_traj_params[2],
                                            arm_traj_params[3])
+            
         except Exception as e:
             print(f"Error creating TrajPlannerTime: {e}")
             return ik_solution_prev, []
@@ -349,6 +359,7 @@ class KoalbyArmController:
             self.ik_solution_right = ik_solution_prev
             
         return ik_solution_prev, trajectory_buffer
+
 # -----------------------------------------------------------------
 # Example Usage
 # -----------------------------------------------------------------
