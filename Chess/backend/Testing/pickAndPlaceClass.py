@@ -6,6 +6,7 @@ import numpy as np
 sys.path.append("./")
 from backend.KoalbyHumanoid.RobotKoalby2 import Robot2
 from backend.KoalbyHumanoid.trajPlannerTime import TrajPlannerTime
+from backend.KoalbyHumanoid.ConfigKoalby2 import Joints
 
 
 class KoalbyArmController:
@@ -29,58 +30,75 @@ class KoalbyArmController:
             base_elements=['shoulder_right', 'shoulderspin_right'],
             active_links_mask=[False, True, True, True, True, True, True]
         )
+        
         self.left_arm_chain = Chain.from_urdf_file(
             self.urdf_path,
             base_elements=['shoulder_left', 'shoulderspin_left'],
             active_links_mask=[False, True, True, True, True, True, True]
         )
-        # self.camera_chain = Chain.from_urdf_file(
-        #     self.urdf_path,
-        #     base_elements=['neck', 'neckturn']
-        # )
-        # print("IK chains loaded.")
+
+        self.camera_chain = Chain.from_urdf_file(
+            self.urdf_path,
+            base_elements=['neck', 'neckturn']
+        )
+
+        print("IK chains loaded.")
 
         # Initial state
         # self.INITIAL_ARM_ANGLES = np.array([0.0] * 7)
         self.INITIAL_ARM_ANGLES = np.array([
             0.0,                # 0: Base link (inactive)
             0.0,                # 1: Shoulder spin (motor 6)
-            np.deg2rad(0),                # 2: Shoulder lift (motor 7)
-            0.0,    # 3: Elbow joint (motor 8) <-- KEY CHANGE
+            np.deg2rad(0),      # 2: Shoulder lift (motor 7)
+            0.0,                # 3: Elbow joint (motor 8) <-- KEY CHANGE
             0.0,                # 4: Forearm spin (motor 9)
             0.0,                # 5: Wrist (motor 10)
             0.0                 # 6: Gripper (motor 11)
         ])
+
         self.left_arm_angles = self.INITIAL_ARM_ANGLES.copy()
         self.right_arm_angles = self.INITIAL_ARM_ANGLES.copy()
-        self.camera_angles = np.array([0, 0, 0, 0])
+
+        self.camera_angles = [0, 0, 0, 0]
         
         # Forward kinematics for camera
-        # self.camera_frame_transformation = self.camera_chain.forward_kinematics(self.camera_angles)
+        self.camera_frame_transformation = self.camera_chain.forward_kinematics(self.camera_angles, False)
 
         # Constants
         # Joint limits based on your original script
         self.JOINT_LIMITS = {
             # Left Arm
-            5: (np.deg2rad(-180), np.deg2rad(180)),
-            6: (np.deg2rad(-90), np.deg2rad(130)), #100
-            7: (np.deg2rad(-110), np.deg2rad(110)),  
-            8: (np.deg2rad(-180), np.deg2rad(180)),
-            9: (np.deg2rad(-130), np.deg2rad(90)),
-            10: (np.deg2rad(-180), np.deg2rad(180)), # From init loop
+            Joints.shoulderspin_left: (np.deg2rad(-180), np.deg2rad(180)),
+            Joints.biceplift_left: (np.deg2rad(-90), np.deg2rad(130)), #100
+            Joints.elbow_left: (np.deg2rad(-110), np.deg2rad(110)),  
+            Joints.wristspin_left: (np.deg2rad(-180), np.deg2rad(180)),
+            Joints.handcurl_left: (np.deg2rad(-130), np.deg2rad(90)),
+            Joints.gripper_left: (np.deg2rad(-180), np.deg2rad(180)), # From init loop
+
             # Right Arm
-            0: (np.deg2rad(-180), np.deg2rad(180)),
-            1: (np.deg2rad(-90), np.deg2rad(130)), #100
-            2: (np.deg2rad(-110), np.deg2rad(110)),  
-            3: (np.deg2rad(-180), np.deg2rad(180)),
-            4: (np.deg2rad(-130), np.deg2rad(90)),
-            11: (np.deg2rad(-180), np.deg2rad(180)) # From init loop
+            Joints.shoulderspin_right: (np.deg2rad(-180), np.deg2rad(180)),
+            Joints.biceplift_right: (np.deg2rad(-90), np.deg2rad(130)), #100
+            Joints.elbow_right: (np.deg2rad(-110), np.deg2rad(110)),  
+            Joints.wristspin_right: (np.deg2rad(-180), np.deg2rad(180)),
+            Joints.handcurl_right: (np.deg2rad(-130), np.deg2rad(90)), 
+            Joints.gripper_right: (np.deg2rad(-180), np.deg2rad(180)) # From init loop
         }
         
         # Motor mapping based on your init loop
         self.MOTOR_ID_MAP = {
-            "left": [6, 7, 8, 9, 10, 11],
-            "right": [0, 1, 2, 3, 4, 5]
+            "left": [Joints.shoulderspin_left,
+                     Joints.biceplift_left, 
+                     Joints.elbow_left, 
+                     Joints.wristspin_left, 
+                     Joints.handcurl_left,
+                     Joints.gripper_left],
+
+            "right": [Joints.shoulderspin_right,
+                      Joints.biceplift_right, 
+                      Joints.elbow_right, 
+                      Joints.wristspin_right, 
+                      Joints.handcurl_right,
+                      Joints.gripper_right]
         }
 
         self.GRIPPER_OPEN_VAL = math.radians(-60)        
@@ -103,9 +121,9 @@ class KoalbyArmController:
         self.gripper_states[arm_side] = value
         
         if arm_side == "left":
-            motor_idx = 11
+            motor_idx = Joints.gripper_left
         else: 
-            motor_idx = 5
+            motor_idx = Joints.gripper_right
             
         print(f"Setting {arm_side} gripper (Motor {motor_idx}) to {value:.3f}")
         self.robot.motors[motor_idx].target = (value, 'P')
@@ -124,10 +142,10 @@ class KoalbyArmController:
         ik_index = 0
         
         if arm_side == "left":
-            motor_id = 6
+            motor_id = Joints.shoulderspin_left
             self.ik_solution_left[ik_index] = value
         elif arm_side == "right":
-            motor_id = 0
+            motor_id = Joints.shoulderspin_right
             self.ik_solution_right[ik_index] = value
         else:
             return
@@ -146,18 +164,18 @@ class KoalbyArmController:
         self.set_gripper(arm_side, self.GRIPPER_CLOSED_VAL)
 
     def initialize_robot_position(self):
-        self.robot.motors[0].target = (math.radians(0), 'P') 
-        self.robot.motors[1].target = (math.radians(0), 'P') 
-        self.robot.motors[2].target = (math.radians(0), 'P') 
-        self.robot.motors[3].target = (math.radians(0), 'P') 
-        self.robot.motors[4].target = (math.radians(0), 'P') 
-        self.robot.motors[5].target = (math.radians(0), 'P') 
-        self.robot.motors[6].target = (math.radians(0), 'P') #shoulder 1 koint - -180 to 180
-        self.robot.motors[7].target = (math.radians(0), 'P') #shoulder 2 joint - 85 sends it down to legs, -90 sends arm above head
-        self.robot.motors[8].target = (math.radians(0), 'P') #Elbow joint - 110 moves towards board, may have overlap with link, -110 works
-        self.robot.motors[9].target = (math.radians(0), 'P') #Forearm joint - 180 to -180 should work
-        self.robot.motors[10].target = (math.radians(0), 'P') #Wrist joint - 90 works, but we don't need it to bend in that angle, -130 is maximum
-        self.robot.motors[11].target = (math.radians(0), 'P') #nothing? will just do -180 to 180
+        self.robot.motors[Joints.shoulderspin_left].target = (math.radians(0), 'P') 
+        self.robot.motors[Joints.biceplift_left].target = (math.radians(0), 'P') 
+        self.robot.motors[Joints.elbow_left].target = (math.radians(0), 'P') 
+        self.robot.motors[Joints.wristspin_left].target = (math.radians(0), 'P') 
+        self.robot.motors[Joints.handcurl_left].target = (math.radians(0), 'P') 
+        self.robot.motors[Joints.gripper_left].target = (math.radians(0), 'P') 
+        self.robot.motors[Joints.shoulderspin_right].target = (math.radians(0), 'P') #shoulder 1 koint - -180 to 180
+        self.robot.motors[Joints.biceplift_right].target = (math.radians(0), 'P') #shoulder 2 joint - 85 sends it down to legs, -90 sends arm above head
+        self.robot.motors[Joints.elbow_right].target = (math.radians(0), 'P') #Elbow joint - 110 moves towards board, may have overlap with link, -110 works
+        self.robot.motors[Joints.wristspin_right].target = (math.radians(0), 'P') #Forearm joint - 180 to -180 should work
+        self.robot.motors[Joints.handcurl_right].target = (math.radians(0), 'P') #Wrist joint - 90 works, but we don't need it to bend in that angle, -130 is maximum
+        self.robot.motors[Joints.gripper_right].target = (math.radians(0), 'P') #nothing? will just do -180 to 180
         self.robot.moveAllToTarget()
 
     def transform_camera_to_robot(self, camera_point):
@@ -300,7 +318,7 @@ class KoalbyArmController:
             for idx, motor_index in enumerate(motor_ids, start=1):
                 if idx < len(ik_solution):
                     if 0 <= motor_index < len(self.robot.motors):
-                        if motor_index == 11 or motor_index == 5:
+                        if motor_index == Joints.gripper_left or motor_index == Joints.gripper_right:
                             self.robot.motors[motor_index].target = (desired_gripper_val, 'P')
                         else:
                             self.robot.motors[motor_index].target = (ik_solution[idx], 'P')
@@ -364,6 +382,7 @@ if __name__ == "__main__":
     right_end_pos = [-0.131, -0.368, -0.127]
     right_intermediate_pos = [right_first_end[0], right_first_end[1], right_first_end[2] + 0.05]
     right_intermediate_end_pos = [right_end_pos[0], right_end_pos[1], right_end_pos[2] + 0.05]
+
     final_ik_right, right_trajectory = controller.execute_arm_trajectory(
         arm_side="right",
         start_pos=right_end_effector_start_pos,
@@ -372,6 +391,7 @@ if __name__ == "__main__":
         target_orientation=target_orientation,
         ik_threshold=3.0
     )
+
     final_ik_right, right_trajectory = controller.execute_arm_trajectory(
         arm_side="right",
         start_pos=right_intermediate_pos,
@@ -380,6 +400,7 @@ if __name__ == "__main__":
         target_orientation=target_orientation,
         ik_threshold=3.0
     )
+
     final_ik_right, right_trajectory = controller.execute_arm_trajectory(
         arm_side="right",
         start_pos=right_first_end,
@@ -388,6 +409,7 @@ if __name__ == "__main__":
         target_orientation=target_orientation,
         ik_threshold=3.0
     )
+
     final_ik_right, right_trajectory = controller.execute_arm_trajectory(
         arm_side="right",
         start_pos=right_intermediate_pos,
@@ -396,6 +418,7 @@ if __name__ == "__main__":
         target_orientation=target_orientation,
         ik_threshold=3.0
     )
+
     final_ik_right, right_trajectory = controller.execute_arm_trajectory(
         arm_side="right",
         start_pos=right_intermediate_end_pos,
