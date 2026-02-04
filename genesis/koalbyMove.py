@@ -88,7 +88,7 @@ class koalbyMove():
         while(runStatus):
 
             # Wait for a move input
-            posString = input("Please enter a goal position (with the format 'x y z') or 'q' to quit")
+            posString = input("Please enter a goal position (with the format 'x y z') or 'q' to quit\n")
 
             if (posString == 'q'):
                 runStatus = False
@@ -97,7 +97,7 @@ class koalbyMove():
                 # Convert input into an array and convert strings to ints
                 pos = np.array(posString.split(), dtype = float)
 
-                end_effector = input("Which hand would you like to use? (right or left)")
+                end_effector = input("Which hand would you like to use? (right or left)\n")
 
                 self.makeMove(self.scene, self.robot, pos, end_effector)
         
