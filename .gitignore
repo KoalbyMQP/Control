@@ -225,6 +225,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+sim-venv/
 
 # Spyder project settings
 .spyderproject
