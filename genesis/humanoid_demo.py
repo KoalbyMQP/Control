@@ -22,7 +22,7 @@ plane = scene.add_entity(
 
 finley = scene.add_entity(
     gs.morphs.URDF(
-        file = 'Humanoid_URDF_9-10//urdf//Humanoid_URDF_9-10.urdf',
+        file = 'genesis//Humanoid_URDF_9-10//urdf//Humanoid_URDF_9-10.urdf',
         pos = (0.0, 0.0, .75),
         fixed = True
     ),
