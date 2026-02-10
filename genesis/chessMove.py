@@ -22,9 +22,9 @@ plane = scene.add_entity(
 
 finley = scene.add_entity(
     gs.morphs.URDF(
-        file = 'genesis//Balancing_Chess_URDF//urdf//Balancing_Chess_URDF.urdf',
+        file = 'Balancing_Chess_URDF//urdf//Balancing_Chess_URDF.urdf',
         pos = (0.0, 0.0, .735),
-        quat = (0, 0, 0, 1),
+        quat = (1, 0, 0, 0),
         fixed = True,
     ),
 )
@@ -68,7 +68,6 @@ while True:
     qpos = finley.inverse_kinematics(
         link = end_effector,
         pos  = get_user_target(), #xyz
-        quat = np.array([1, 0, 0, 0]),
     )
     
     if qpos is None:
