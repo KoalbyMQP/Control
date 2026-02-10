@@ -48,10 +48,6 @@ joint = active_joints[joint_idx]
 dof_idx = joint.dofs_idx_local
 
 print(f"\nControlling joint: {joint.name}")
-print("Controls:")
-print("  w → +0.1")
-print("  s → -0.1")
-print("  q → quit\n")
 
 # -------------------------
 # Control loop
@@ -60,26 +56,30 @@ STEP = 0.1
 qpos = finley.get_qpos().clone()
 
 while True:
-    key = input("Command (w/s/q): ").strip().lower()
+    key = input("Input 'q' to quit, 'c' to change motors, or how much you want the motor to spin (in rads): ")
 
     if key == "q":
-        print("Exiting control.")
         break
 
-    elif key == "w":
-        qpos[dof_idx] += STEP
+    elif key == "c":
+        active_joints = [j for j in finley.joints if j.n_dofs > 0]
 
-    elif key == "s":
-        qpos[dof_idx] -= STEP
+        print("\n--- Controllable Joints ---")
+        for i, joint in enumerate(active_joints):
+            print(f"[{i}] {joint.name}")
+        print("--------------------------")
+
+        joint_idx = int(input("Select joint index: "))
+        joint = active_joints[joint_idx]
+        dof_idx = joint.dofs_idx_local
+
+        print(f"\nControlling joint: {joint.name}")
 
     else:
-        print("Invalid key.")
-        continue
+        qpos[dof_idx] = float(key)
 
-    finley.control_dofs_position(qpos)
+        finley.control_dofs_position(qpos)
 
-    # step a few frames so motion is visible
-    for _ in range(10):
-        scene.step()
-
-    print(f"{joint.name} = {qpos[dof_idx]:.3f}")
+        # step a few frames so motion is visible
+        for _ in range(20):
+            scene.step()
