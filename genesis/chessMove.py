@@ -22,7 +22,7 @@ plane = scene.add_entity(
 
 finley = scene.add_entity(
     gs.morphs.URDF(
-        file = 'Balancing_Chess_URDF//urdf//Balancing_Chess_URDF.urdf',
+        file = 'genesis//Balancing_Chess_URDF//urdf//Balancing_Chess_URDF.urdf',
         pos = (0.0, 0.0, .735),
         quat = (0, 0, 0, 1),
         fixed = True,
@@ -60,7 +60,7 @@ print(left_arm_indices)
 standing_qpos = finley.get_qpos()
 
 # get the end-effector link
-end_effector = finley.get_link('gripper_left')
+end_effector = finley.get_link('hand_left')
 
 # move to pre-grasp pose
 while True:
@@ -80,7 +80,7 @@ while True:
     for i in left_arm_indices:
         final_qpos[i] = qpos[i]
 
-    print(final_qpos)
+    print('final_qpos:', final_qpos[left_arm_indices])
 
     path = finley.plan_path(
         qpos_goal     = qpos,
