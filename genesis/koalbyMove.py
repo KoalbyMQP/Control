@@ -1,5 +1,6 @@
 import genesis as gs
 import numpy as np
+import torch
 
 class koalbyMove():
 
@@ -33,12 +34,15 @@ class koalbyMove():
         robot = scene.add_entity(
             gs.morphs.URDF(
                 file = self.urdf_path,
-                pos = (0.0, 0.0, .75),
+                pos = (0.0, 0.0, .735),
+                quat = (0, 0, 0, 1),
                 fixed = True
             ),
         )
 
         scene.build()
+
+        print(robot.joints)
 
         self.scene = scene
         self.robot = robot
@@ -63,6 +67,8 @@ class koalbyMove():
             quat = np.array([1, 0, 0, 0]),
         )
 
+        print(qpos)
+
         # plan a motion path, motion duration = num_waypoints / 100
         path = robot.plan_path(
             qpos_goal     = qpos,
@@ -71,6 +77,7 @@ class koalbyMove():
 
         # execute the planned path
         for waypoint in path:
+            print(waypoint)
             robot.control_dofs_position(waypoint)
             scene.step()
 
