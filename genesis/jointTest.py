@@ -45,7 +45,7 @@ print("--------------------------")
 # -------------------------
 joint_idx = int(input("Select joint index: "))
 joint = active_joints[joint_idx]
-dof_idx = joint.dofs_idx_local
+dof_idx = joint.dof_idx_local
 
 print(f"\nControlling joint: {joint.name}")
 print("Controls:")
@@ -60,7 +60,7 @@ STEP = 0.1
 qpos = finley.get_qpos().clone()
 
 while True:
-    key = input("Command (w/s/q): ").strip().lower()
+    key = input("Command (w/s/q/index): ").strip().lower()
 
     if key == "q":
         print("Exiting control.")
@@ -68,18 +68,27 @@ while True:
 
     elif key == "w":
         qpos[dof_idx] += STEP
+        finley.control_dofs_position(qpos)
+        for _ in range(10):
+            scene.step()
 
     elif key == "s":
         qpos[dof_idx] -= STEP
+        finley.control_dofs_position(qpos)
+        for _ in range(10):
+            scene.step()
+    
+    elif key.isdigit():
+        idx = int(key)
+        if 0 <= idx < len(active_joints):
+            joint = active_joints[idx]
+            dof_idx = joint.dofs_idx_local
+            print(f"Switched to joint: {joint.name}")
+            continue
+        else:
+            print("Invalid index.")
+            continue
 
     else:
         print("Invalid key.")
         continue
-
-    finley.control_dofs_position(qpos)
-
-    # step a few frames so motion is visible
-    for _ in range(10):
-        scene.step()
-
-    print(f"{joint.name} = {qpos[dof_idx]:.3f}")
