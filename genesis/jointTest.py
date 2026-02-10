@@ -45,7 +45,7 @@ print("--------------------------")
 # -------------------------
 joint_idx = int(input("Select joint index: "))
 joint = active_joints[joint_idx]
-dof_idx = joint.dofs_idx_local
+dof_idx = joint.dof_idx_local
 
 print(f"\nControlling joint: {joint.name}")
 
