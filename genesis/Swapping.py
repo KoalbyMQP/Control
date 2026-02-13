@@ -29,6 +29,14 @@ finley = scene.add_entity(
     ),
 )
 
+SwappingStation = scene.add_entity(
+    gs.morphs.URDF(
+        file = 'SwappingStation//urdf//SwappingStationURDF.urdf',
+        pos = (1.2, 0.0, .75),
+        fixed = True,
+    ),
+)
+
 def get_user_target():
     print("\nEnter target coordinates (e.g., '0.3 0.0 0.5'):")
     try:
