@@ -51,9 +51,9 @@ joint_names = [
     "elbowcurl_left",
     "handspin_left",
     "wristcurl_left",
-    "gripper_left"
+    # "gripper_left"
 ]
-left_arm_indices = [finley.get_joint(name).dof_idx_local for name in joint_names]
+left_arm_indices = [finley.get_joint(name).dofs_idx_local[0] for name in joint_names]
 
 print(left_arm_indices)
 
@@ -61,6 +61,7 @@ standing_qpos = finley.get_qpos()
 
 # get the end-effector link
 end_effector = finley.get_link('hand_left')
+print("end_effector position:", end_effector.get_pos())
 
 # move to pre-grasp pose
 while True:
@@ -82,10 +83,13 @@ while True:
     print('final_qpos:', final_qpos[left_arm_indices])
 
     path = finley.plan_path(
-        qpos_goal     = qpos,
+        qpos_goal = final_qpos,
         num_waypoints = 200,
-
     )
+
+    if path is None:
+        print("Path planning failed.")
+        continue
 
     active_joints = [j for j in finley.joints if j.n_dofs > 0]
     print("------ ROBOT JOINTS ------")
@@ -101,5 +105,6 @@ while True:
     # allow robot to reach the last waypoint
     for i in range(100):
         scene.step()
-
-
+    
+    print("Reached Target Position!")
+    print("end_effector position:", end_effector.get_pos())
