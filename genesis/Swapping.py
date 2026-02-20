@@ -1,6 +1,5 @@
 import genesis as gs
 import numpy as np
-import math
 import time
 
 gs.init()
@@ -20,11 +19,11 @@ plane = scene.add_entity(
     gs.morphs.Plane(),
 )
 
-
 finley = scene.add_entity(
     gs.morphs.URDF(
         file = 'SwappingURDF//urdf//SwappingURDF.urdf',
-        pos = (0.0, 0.0, .75),
+        pos = (0.0, 0.0, .735),
+        quat = (1, 0, 0, 0),
         fixed = True,
     ),
 )
@@ -32,72 +31,77 @@ finley = scene.add_entity(
 SwappingStation = scene.add_entity(
     gs.morphs.URDF(
         file = 'SwappingStation//urdf//SwappingStationURDF.urdf',
-        pos = (1.2, 0.0, .75),
+        pos = (1.30, 0.91, 1.60),
+        euler = (90, 90, 0), #x red, y green, z blue
         fixed = True,
     ),
 )
 
-def get_user_target():
-    print("\nEnter target coordinates (e.g., '0.3 0.0 0.5'):")
-    try:
-        user_input = input(">> ")
-        coords = [float(x) for x in user_input.split()]
-        if len(coords) != 3:
-            print("Invalid input! Please enter 3 numbers.")
-            return None
-        return np.array(coords)
-    except ValueError:
-        print("Invalid numbers!")
-        return None
-    
-
 scene.build()
 
-#    [1=Shoulder, 5=ArmLift, 8=Elbow, 11=HandSpin, 15=WristCurl]
-left_arm_indices = [1, 5, 8, 11, 15]
+joint_names = [
+    "shoulderspin_left",
+    "armlift_left",
+    "elbowcurl_left",
+    "handspin_left",
+    "wristcurl_left",
+]
+left_arm_indices = [finley.get_joint(name).dofs_idx_local[0] for name in joint_names]
+
 standing_qpos = finley.get_qpos()
 
-# get the end-effector link
 end_effector = finley.get_link('wrist_left')
 
+waypoints = [
+    np.array([0.08, -0.2, 0.65]),   # Point 1
+    np.array([0.08, -0.25, 0.6]),   # Point 2
+    np.array([0.1, -0.15, 0.65]),  # Point 3
+    np.array([0.08, 0.05, 0.5]),   # Point 4 (Return closer to start)
+]
 
 
-# move to pre-grasp pose
-while True:
-        
+# Fixed orientation of end effector
+target_orientation = np.array([0.9239, 0.0, -0.3827, 0.0]) 
+
+for i, target_pos in enumerate(waypoints):
+    print(f"\n--- Moving to Waypoint {i+1}: {target_pos} ---")
+
     qpos = finley.inverse_kinematics(
         link = end_effector,
-        pos  = get_user_target(), #xyz
-        quat = np.array([0, 0, 0, 0]),
+        pos  = target_pos,
+        quat = target_orientation,
     )
     
     if qpos is None:
-        print("target out of reach")
+        print(f"Waypoint {i+1} is out of reach")
         continue
 
     final_qpos = standing_qpos.clone()
+    for idx in left_arm_indices:
+        final_qpos[idx] = qpos[idx]
 
-    for i in left_arm_indices:
-        final_qpos[i] = qpos[i]
 
     path = finley.plan_path(
-        qpos_goal     = final_qpos,
-        num_waypoints = 200,
+        qpos_goal = final_qpos,
+        num_waypoints = 50, 
     )
 
-    # active_joints = [j for j in finley.joints if j.n_dofs > 0]
-    # print("------ ROBOT JOINTS ------")
-    # for i, joint in enumerate(active_joints):
-    #     print(f"DOF Index {i}: {joint.name}")
-    # print("--------------------------")
+    if path is None:
+        print(f"Path planning failed for Waypoint {i+1}.")
+        continue
 
-    # execute the planned path
     for waypoint in path:
         finley.control_dofs_position(waypoint)
         scene.step()
 
-    # allow robot to reach the last waypoint
-    for i in range(100):
+    for _ in range(100):
         scene.step()
+    
+    print(f"Reached Waypoint {i+1}.")
+    
+    time.sleep(0.5) 
 
+print("\nAll waypoints completed.")
 
+while True:
+    scene.step()
