@@ -6,7 +6,7 @@ import numpy as np
 # -------------------------
 gs.init()
 
-DEBUG = False
+DEBUG = True
 
 scene = gs.Scene(
     show_viewer=True,
@@ -91,3 +91,7 @@ while True:
                 scene.step()
 
         qpos = finley.get_qpos().clone()
+    
+    else:
+
+        print("Invalid Input, please try again.")
