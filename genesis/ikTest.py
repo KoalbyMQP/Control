@@ -50,7 +50,7 @@ right_arm_joints = [
 # -------------------------------------------------
 # Choose End Effector Link Name
 # -------------------------------------------------
-EE_NAME = "hand_left"  
+EE_NAME = "gripper_left"  
 
 ee_link = finley.get_link(EE_NAME)
 
@@ -62,13 +62,13 @@ if ee_link is None:
 # -------------------------------------------------
 arm_dofs_idx_local = []
 
-if EE_NAME == "hand_left":
+if EE_NAME == "gripper_left":
     for joint in finley.joints:
         if joint.name in left_arm_joints:
             if joint.n_dofs > 0:
                 arm_dofs_idx_local.extend(joint.dofs_idx_local)
 
-elif EE_NAME == "hand_right":
+elif EE_NAME == "gripper_right":
     for joint in finley.joints:
         if joint.name in right_arm_joints:
             if joint.n_dofs > 0:
@@ -100,7 +100,6 @@ while True:
         ik_result = finley.inverse_kinematics(
             link = ee_link,
             pos = target_pos,
-            quat = np.array([0, 0, 0, 1]),
             dofs_idx_local = arm_dofs_idx_local
         )
 
@@ -113,7 +112,7 @@ while True:
 
         path = finley.plan_path(
             qpos_goal = ik_result,
-            dofs_idx_local = arm_dofs_idx_local
+            num_waypoints = 50
         )
 
         print(path)
