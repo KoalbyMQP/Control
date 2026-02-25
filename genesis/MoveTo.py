@@ -20,18 +20,27 @@ plane = scene.add_entity(
     gs.morphs.Plane(),
 )
 
+
 finley = scene.add_entity(
     gs.morphs.URDF(
-        file = 'Balancing_Chess_URDF//urdf//Balancing_Chess_URDF.urdf',
+        file = 'SwappingURDF//urdf//SwappingURDF.urdf',  #SwappingURDF//urdf//SwappingURDF.urdf
         pos = (0.0, 0.0, .735),
         quat = (1, 0, 0, 0),
         fixed = True,
     ),
 )
 
+SwappingStation = scene.add_entity(
+    gs.morphs.URDF(
+        file = 'SwappingStation//urdf//SwappingStationURDF.urdf',
+        pos = (1.30, 0.91, 1.60),
+        euler = (90, 90, 0), #x red, y green, z blue
+        fixed = True,
+    ),
+)
 
 def get_user_target():
-    print("\nEnter target coordinates (e.g., '0.3 0.0 0.5'):")
+    print("\nEnter target coordinates (e.g., '0.4 0.2 1.0'):")
     try:
         user_input = input(">> ")
         coords = [float(x) for x in user_input.split()]
@@ -61,7 +70,7 @@ print(left_arm_indices)
 standing_qpos = finley.get_qpos()
 
 # get the end-effector link
-end_effector = finley.get_link('hand_left')
+end_effector = finley.get_link('wrist_left')
 print("end_effector position:", end_effector.get_pos())
 
 # move to pre-grasp pose
@@ -70,6 +79,7 @@ while True:
     qpos = finley.inverse_kinematics(
         link = end_effector,
         pos  = get_user_target(), #xyz
+        quat = np.array([0.9239, 0.0, -0.3827, 0.0]), #w, x, y, z
     )
     
     if qpos is None:
@@ -93,10 +103,7 @@ while True:
         continue
 
     active_joints = [j for j in finley.joints if j.n_dofs > 0]
-    print("------ ROBOT JOINTS ------")
-    for i, joint in enumerate(active_joints):
-        print(f"DOF Index {i}: {joint.name}")
-    print("--------------------------")
+    
 
     # execute the planned path
     for waypoint in path:
