@@ -47,6 +47,9 @@ right_arm_joints = [
     "wristcurl_right"
 ]
 
+cached_paths = torch.load('test_path.pt')
+key_counter = len(cached_paths)
+
 # -------------------------------------------------
 # Choose End Effector Link Name
 # -------------------------------------------------
@@ -81,9 +84,10 @@ print("\nArm DOFs local indices:", arm_dofs_idx_local)
 # -------------------------------------------------
 while True:
 
-    cmd = input("\n'q' to quit, 'ik' to move arm with IK: ")
+    cmd = input("\n'q' to quit, 'ik' to move arm with IK, 'r' to choose previous position: ")
 
     if cmd == "q":
+        torch.save(cached_paths, 'test_path.pt')
         break
 
     if cmd == "ik":
@@ -100,6 +104,7 @@ while True:
         ik_result = finley.inverse_kinematics(
             link = ee_link,
             pos = target_pos,
+            quat = np.array([0, 0, 0, -1]),
             dofs_idx_local = arm_dofs_idx_local
         )
 
@@ -114,6 +119,25 @@ while True:
             qpos_goal = ik_result,
             num_waypoints = 50
         )
+        key_counter += 1
+        cached_paths[key_counter] = path
+        
+        print(path)
+
+        print("Executing trajectory...")
+
+        for waypoint in path:
+            finley.control_dofs_position(
+                waypoint,
+            )
+            scene.step()
+
+        for _ in range(100):
+            scene.step()
+    if cmd == "r":
+        print(cached_paths)
+        
+        path = cached_paths[int(input("Path Key: "))]
 
         print(path)
 
