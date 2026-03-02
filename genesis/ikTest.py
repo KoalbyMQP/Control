@@ -114,14 +114,19 @@ while True:
         break
 
     if cmd == "ik":
-        # save_flag = False
+        save_flag = False
         x = float(input("Target X: "))
         y = float(input("Target Y: "))
         z = float(input("Target Z: "))
 
-        # if not save_flag:
-        #     save_flag = input("Save this path? (y/n): ").lower() == 'y'
-        key_counter = str(input("Path Key: "))
+        if not save_flag:
+            save_answer = input("Save this path? (y/n): ").lower()
+            if save_answer == 'y':
+                save_flag = True
+                key_counter = str(input("Path Key: "))
+                print("This path will be saved.")
+            else:
+                print("This path will NOT be saved.")
 
         target_pos = torch.tensor([x, y, z], dtype=torch.float32)
 
@@ -147,8 +152,8 @@ while True:
             qpos_goal = ik_result,
             num_waypoints = 200,
         )
-       
-        cached_paths[key_counter] = path
+        if save_flag:
+            cached_paths[key_counter] = path
         
         print(path)
 
