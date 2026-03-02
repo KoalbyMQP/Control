@@ -26,10 +26,29 @@ finley = scene.add_entity(
         pos=(0.0, 0.0, 0.735),
         quat=(0, 0, 0, 1),
         fixed=True,
+        collision=True,
     )
 )
 
+cart = scene.add_entity(
+    gs.morphs.Box(
+        size=(0.3, 0.6, 0.6),
+        pos=(0.0, 0.5, 0.3),
+        collision=True,
+    )
+)
+
+target_marker = scene.add_entity(
+        gs.morphs.Sphere(
+            radius=0.02,
+            pos=(0.0,0.4,0.65),
+            fixed=True,
+        )
+)
+
 scene.build()
+
+robot_base_pos = torch.tensor(finley.get_pos(),dtype=torch.float32)
 
 left_arm_joints = [
     "shoulderspin_left",
@@ -48,12 +67,12 @@ right_arm_joints = [
 ]
 
 cached_paths = torch.load('test_path.pt')
-key_counter = len(cached_paths)
+
 
 # -------------------------------------------------
 # Choose End Effector Link Name
 # -------------------------------------------------
-EE_NAME = "gripper_left"  
+EE_NAME = "gripper_right"  
 
 ee_link = finley.get_link(EE_NAME)
 
@@ -84,26 +103,35 @@ print("\nArm DOFs local indices:", arm_dofs_idx_local)
 # -------------------------------------------------
 while True:
 
-    cmd = input("\n'q' to quit, 'ik' to move arm with IK, 'r' to choose previous position: ")
-
+    cmd = input("\n'q' to quit, 'ik' to move arm with IK, 'r' to choose previous position, 'c' to clear cached paths: ")
+    if cmd == "c":
+        cached_paths = {}
+        key_counter = 0
+        print("Cached paths cleared.")
+        continue
     if cmd == "q":
         torch.save(cached_paths, 'test_path.pt')
         break
 
     if cmd == "ik":
-
+        # save_flag = False
         x = float(input("Target X: "))
         y = float(input("Target Y: "))
         z = float(input("Target Z: "))
 
+        # if not save_flag:
+        #     save_flag = input("Save this path? (y/n): ").lower() == 'y'
+        key_counter = str(input("Path Key: "))
+
         target_pos = torch.tensor([x, y, z], dtype=torch.float32)
 
+        local_target = target_pos - robot_base_pos
         # -----------------------------------
         # Inverse Kinematics (ARM ONLY)
         # -----------------------------------
         ik_result = finley.inverse_kinematics(
             link = ee_link,
-            pos = target_pos,
+            pos = local_target,
             quat = np.array([0, 0, 0, -1]),
             dofs_idx_local = arm_dofs_idx_local
         )
@@ -117,9 +145,9 @@ while True:
 
         path = finley.plan_path(
             qpos_goal = ik_result,
-            num_waypoints = 50
+            num_waypoints = 200,
         )
-        key_counter += 1
+       
         cached_paths[key_counter] = path
         
         print(path)
@@ -135,9 +163,10 @@ while True:
         for _ in range(100):
             scene.step()
     if cmd == "r":
-        print(cached_paths)
-        
-        path = cached_paths[int(input("Path Key: "))]
+        for key in cached_paths.keys():
+            print(f"Key: {key}")
+
+        path = cached_paths[str(input("Path Key: "))]
 
         print(path)
 
