@@ -83,14 +83,14 @@ if ee_link is None:
 arm_dofs_idx_local = []
 
 if EE_NAME == "gripper_left":
-    offset = 1.45
+    offset = 0.145
     for joint in finley.joints:
         if joint.name in left_arm_joints:
             if joint.n_dofs > 0:
                 arm_dofs_idx_local.extend(joint.dofs_idx_local)
 
 elif EE_NAME == "gripper_right":
-    offset = -1.45
+    offset = -0.145
     for joint in finley.joints:
         if joint.name in right_arm_joints:
             if joint.n_dofs > 0:
@@ -155,7 +155,7 @@ while True:
             qpos_goal = ik_result,
             num_waypoints = 200,
         )
-        
+
         if save_flag:
             cached_paths[key_counter] = path
         
