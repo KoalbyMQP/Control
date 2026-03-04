@@ -48,8 +48,6 @@ target_marker = scene.add_entity(
 
 scene.build()
 
-robot_base_pos = torch.tensor(finley.get_pos(),dtype=torch.float32)
-
 left_arm_joints = [
     "shoulderspin_left",
     "armlift_left",
@@ -85,16 +83,21 @@ if ee_link is None:
 arm_dofs_idx_local = []
 
 if EE_NAME == "gripper_left":
+    offset = 1.45
     for joint in finley.joints:
         if joint.name in left_arm_joints:
             if joint.n_dofs > 0:
                 arm_dofs_idx_local.extend(joint.dofs_idx_local)
 
 elif EE_NAME == "gripper_right":
+    offset = -1.45
     for joint in finley.joints:
         if joint.name in right_arm_joints:
             if joint.n_dofs > 0:
                 arm_dofs_idx_local.extend(joint.dofs_idx_local)
+
+else:
+    raise ValueError("No gripper specified")
 
 print("\nArm DOFs local indices:", arm_dofs_idx_local)
 
@@ -109,6 +112,7 @@ while True:
         key_counter = 0
         print("Cached paths cleared.")
         continue
+
     if cmd == "q":
         torch.save(cached_paths, 'test_path.pt')
         break
@@ -119,25 +123,24 @@ while True:
         y = float(input("Target Y: "))
         z = float(input("Target Z: "))
 
-        if not save_flag:
+        if save_flag:
             save_answer = input("Save this path? (y/n): ").lower()
             if save_answer == 'y':
                 save_flag = True
                 key_counter = str(input("Path Key: "))
                 print("This path will be saved.")
             else:
-                print("This path will NOT be saved.")
+                ("This path will NOT be saved.")
 
-        target_pos = torch.tensor([x, y, z], dtype=torch.float32)
+        target_pos = torch.tensor([x + offset, y, z], dtype=torch.float32)
 
-        local_target = target_pos - robot_base_pos
         # -----------------------------------
         # Inverse Kinematics (ARM ONLY)
         # -----------------------------------
         ik_result = finley.inverse_kinematics(
             link = ee_link,
-            pos = local_target,
-            quat = np.array([0, 0, 0, -1]),
+            pos = target_pos,
+            quat = np.array([0, 0, 0, 1]),
             dofs_idx_local = arm_dofs_idx_local
         )
 
@@ -152,6 +155,7 @@ while True:
             qpos_goal = ik_result,
             num_waypoints = 200,
         )
+        
         if save_flag:
             cached_paths[key_counter] = path
         
