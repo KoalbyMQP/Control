@@ -117,6 +117,16 @@ class RobotArmController:
         
         print(f"\nEnd Effector: {self.ee_name}")
         print(f"Arm DOFs local indices: {self.arm_dofs_idx_local}")
+        
+        # Get gripper joint DOF indices
+        self.gripper_dofs_idx_local = []
+        gripper_joint_name = self.ee_name  # "gripper_left" or "gripper_right"
+        for joint in self.robot.joints:
+            if joint.name == gripper_joint_name:
+                if joint.n_dofs > 0:
+                    self.gripper_dofs_idx_local.extend(joint.dofs_idx_local)
+        
+        print(f"Gripper DOFs local indices: {self.gripper_dofs_idx_local}")
     
     def _load_cache(self):
         """Load cached paths from file if it exists."""
@@ -214,6 +224,46 @@ class RobotArmController:
         
         print("Trajectory complete")
     
+    def control_gripper(self, force: float, duration_steps: int = 50):
+        """Control the gripper by applying force to open or close it.
+        
+        Args:
+            force: Force to apply to the gripper joint (positive = open, negative = close)
+            duration_steps: Number of simulation steps to apply the force
+        """
+        if not self.gripper_dofs_idx_local:
+            print("Warning: No gripper DOFs found")
+            return
+        
+        print(f"Applying gripper force: {force} for {duration_steps} steps")
+        
+        for _ in range(duration_steps):
+            self.robot.control_dofs_force(
+                np.array([force]),
+                self.gripper_dofs_idx_local
+            )
+            self.scene.step()
+        
+        print("Gripper control complete")
+    
+    def open_gripper(self, force: float = 0.5, duration_steps: int = 50):
+        """Open the gripper by applying positive force.
+        
+        Args:
+            force: Force magnitude to apply (default: 0.5)
+            duration_steps: Number of simulation steps to apply the force
+        """
+        self.control_gripper(force, duration_steps)
+    
+    def close_gripper(self, force: float = -0.5, duration_steps: int = 50):
+        """Close the gripper by applying negative force.
+        
+        Args:
+            force: Force magnitude to apply (negative for closing, default: -0.5)
+            duration_steps: Number of simulation steps to apply the force
+        """
+        self.control_gripper(force, duration_steps)
+    
     def run_interactive_loop(self):
         """Run the main interactive control loop."""
         print("\n" + "="*50)
@@ -222,12 +272,14 @@ class RobotArmController:
         print("Commands:")
         print("  'ik'  - Move arm to position using inverse kinematics")
         print("  'r'   - Execute a cached trajectory")
+        print("  'o'   - Open gripper")
+        print("  'cl'  - Close gripper")
         print("  'c'   - Clear all cached paths")
         print("  'q'   - Quit")
         print("="*50 + "\n")
         
         while True:
-            cmd = input("\nEnter command (ik/r/c/q): ").strip().lower()
+            cmd = input("\nEnter command (ik/r/o/cl/c/q): ").strip().lower()
             
             if cmd == "q":
                 self._save_cache()
@@ -237,6 +289,12 @@ class RobotArmController:
             elif cmd == "c":
                 self.cached_paths = {}
                 print("Cached paths cleared.")
+            
+            elif cmd == "o":
+                self.open_gripper()
+            
+            elif cmd == "cl":
+                self.close_gripper()
             
             elif cmd == "ik":
                 self._handle_ik_command()
