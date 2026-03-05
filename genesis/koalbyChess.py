@@ -42,14 +42,22 @@ class KoalbyChessArmController(RobotArmController):
             )
         )
         
-        # Add target marker for chess piece placement
-        self.scene.add_entity(
-            gs.morphs.Sphere(
-                radius=0.02,
-                pos=(0.0, 0.4, 0.65),
-                fixed=True,
+        # Add demo chess pieces
+        piece_spacing = 0.3 / 7  # Space 8 pieces across 0.3 width
+        piece_size = (0.03, 0.03, 0.06) # Small rectangular prisms for pieces
+        piece_z = 0.63  # Bottom of pieces rest on board surface (0.6 + 0.03)
+        
+        for i in range(8):
+            piece_x = -0.15 + i * piece_spacing  # Center at 0.0, span from -0.15 to 0.15
+            self.scene.add_entity(
+                gs.morphs.Box(
+                    size=piece_size,
+                    pos=(piece_x, 0.3, piece_z),
+                    color=(0, 0, 0),  # Black color for better visibility
+                    collision=True,
+                )
             )
-        )
+        
         
         self.scene.build()
 
