@@ -1,5 +1,6 @@
 import genesis as gs
 import numpy as np
+import torch
 from koalbyArmController import RobotArmController
 
 
@@ -16,6 +17,9 @@ class KoalbyChessArmController(RobotArmController):
                 camera_lookat=(0.0, 0.0, 0.5),
                 camera_fov=40,
                 max_FPS=60,
+            ),
+            rigid_options = gs.options.RigidOptions(
+                enable_neutral_collision=True
             )
         )
         
@@ -29,23 +33,23 @@ class KoalbyChessArmController(RobotArmController):
                 pos=self.robot_pos,
                 quat=(0, 0, 0, 1),
                 fixed=True,
-                collision=True,
             )
         )
         
         # Add chess board (custom for chess tasks)
         self.scene.add_entity(
             gs.morphs.Box(
-                size=(0.4, 0.55, 0.6),
-                pos=(0.0, 0.45, 0.3),
+                size=(0.4, 0.5, 0.05),
+                pos=(0.0, 0.45, 0.48),
                 collision=True,
+                fixed=True,
             )
         )
         
         # Add demo chess pieces
         piece_spacing = 0.3 / 7  # Space 8 pieces across 0.3 width
         piece_size = (0.03, 0.03, 0.06) # Small rectangular prisms for pieces
-        piece_z = 0.63  # Bottom of pieces rest on board surface (0.6 + 0.03)
+        piece_z = 0.55  # Bottom of pieces rest on board surface (0.6 + 0.03)
         
         for i in range(8):
             piece_x = -0.15 + i * piece_spacing  # Center at 0.0, span from -0.15 to 0.15
@@ -53,13 +57,45 @@ class KoalbyChessArmController(RobotArmController):
                 gs.morphs.Box(
                     size=piece_size,
                     pos=(piece_x, 0.3, piece_z),
-                    color=(0, 0, 0),  # Black color for better visibility
                     collision=True,
                 )
             )
         
-        
         self.scene.build()
+    
+    def move_to_ready_position(self):
+        """Move both grippers to specified ready positions using IK."""
+        print("\nMoving to ready position...")
+        
+        try:
+            # Right gripper target position
+            right_target = np.array([0.4, 0.5, 0.65])
+            print(f"Moving right gripper to {right_target}")
+            
+            self.ee_name = "gripper_right"
+            self._setup_arm_joints()
+            ik_right = self.move_to_ik_target(right_target)
+            path_right = self.plan_trajectory(ik_right, num_waypoints=50)
+            self.execute_trajectory(path_right, pause_steps=50)
+            
+            # Left gripper target position
+            left_target = np.array([-0.4, 0.5, 0.65])
+            print(f"Moving left gripper to {left_target}")
+            
+            self.ee_name = "gripper_left"
+            self._setup_arm_joints()
+            ik_left = self.move_to_ik_target(left_target)
+            path_left = self.plan_trajectory(ik_left, num_waypoints=50)
+            self.execute_trajectory(path_left, pause_steps=50)
+            
+            # Reset to right gripper as default
+            self.ee_name = "gripper_right"
+            self._setup_arm_joints()
+            
+            print("Ready position achieved!")
+            
+        except Exception as e:
+            print(f"Error moving to ready position: {e}")
 
 
 # -------------------------
@@ -73,5 +109,8 @@ if __name__ == "__main__":
         show_viewer=True,
         cache_file="chess_paths.pt",
     )
+    
+    # Move to ready position before accepting commands
+    controller.move_to_ready_position()
     
     controller.run_interactive_loop()

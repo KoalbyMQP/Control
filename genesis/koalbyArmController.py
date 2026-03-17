@@ -48,7 +48,7 @@ class RobotArmController:
         ]
         
         # Initialize Genesis
-        gs.init()
+        gs.init(backend=gs.cpu)
         self.scene = None
         self.robot = None
         self.ee_link = None
@@ -71,6 +71,9 @@ class RobotArmController:
                 camera_lookat=(0.0, 0.0, 0.5),
                 camera_fov=40,
                 max_FPS=60,
+            ),
+            rigid_options = gs.options.RigidOptions(
+                enable_neutral_collision=True
             )
         )
         
@@ -84,7 +87,6 @@ class RobotArmController:
                 pos=self.robot_pos,
                 quat=(0, 0, 0, 1),
                 fixed=True,
-                collision=True,
             )
         )
         
@@ -132,7 +134,7 @@ class RobotArmController:
         """Load cached paths from file if it exists."""
         cache_path = Path(self.cache_file)
         if cache_path.exists():
-            self.cached_paths = torch.load(self.cache_file)
+            self.cached_paths = torch.load(self.cache_file, map_location=torch.device('cpu'))
             print(f"Loaded {len(self.cached_paths)} cached paths")
         else:
             self.cached_paths = {}
@@ -187,7 +189,7 @@ class RobotArmController:
         print(f"IK result: {ik_result}")
         return ik_result
     
-    def plan_trajectory(self, target_qpos: torch.Tensor, num_waypoints: int = 200) -> list:
+    def plan_trajectory(self, target_qpos: torch.Tensor, num_waypoints: int = 50) -> list:
         """Plan a trajectory to target joint configuration.
         
         Args:
