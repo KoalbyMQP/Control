@@ -69,21 +69,33 @@ class KoalbyChessArmController(RobotArmController):
         
         try:
             # Right gripper target position
+            right_midpoint = np.array([0.4, 0.0, 0.65])
             right_target = np.array([0.4, 0.5, 0.65])
             print(f"Moving right gripper to {right_target}")
             
             self.ee_name = "gripper_right"
             self._setup_arm_joints()
+
+            ik_right = self.move_to_ik_target(right_midpoint, None)
+            path_right = self.plan_trajectory(ik_right, num_waypoints=50)
+            self.execute_trajectory(path_right, pause_steps=50)
+
             ik_right = self.move_to_ik_target(right_target)
             path_right = self.plan_trajectory(ik_right, num_waypoints=50)
             self.execute_trajectory(path_right, pause_steps=50)
             
             # Left gripper target position
+            left_midpoint = np.array([-0.4, 0.0, 0.65])
             left_target = np.array([-0.4, 0.5, 0.65])
             print(f"Moving left gripper to {left_target}")
             
             self.ee_name = "gripper_left"
             self._setup_arm_joints()
+
+            ik_left = self.move_to_ik_target(left_midpoint, None)
+            path_left = self.plan_trajectory(ik_left, num_waypoints=50)
+            self.execute_trajectory(path_left, pause_steps=50)
+            
             ik_left = self.move_to_ik_target(left_target)
             path_left = self.plan_trajectory(ik_left, num_waypoints=50)
             self.execute_trajectory(path_left, pause_steps=50)
