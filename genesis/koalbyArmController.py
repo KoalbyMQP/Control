@@ -159,7 +159,7 @@ class RobotArmController:
         else:
             print(f"Using {self.ee_name}")
     
-    def move_to_ik_target(self, target_pos: np.ndarray, target_quat: np.ndarray = None) -> torch.Tensor:
+    def move_to_ik_target(self, target_pos: np.ndarray) -> torch.Tensor:
         """Solve inverse kinematics for a target position.
         
         Args:
@@ -169,8 +169,6 @@ class RobotArmController:
         Returns:
             IK solution (joint angles)
         """
-        if target_quat is None:
-            target_quat = np.array([0, 0, 0, 1])
         
         # Adjust for arm offset
         adjusted_pos = torch.tensor(
@@ -182,14 +180,13 @@ class RobotArmController:
         ik_result = self.robot.inverse_kinematics(
             link=self.ee_link,
             pos=adjusted_pos,
-            quat=target_quat,
             dofs_idx_local=self.arm_dofs_idx_local
         )
         
         print(f"IK result: {ik_result}")
         return ik_result
     
-    def plan_trajectory(self, target_qpos: torch.Tensor, num_waypoints: int = 50) -> list:
+    def plan_trajectory(self, target_qpos: torch.Tensor, num_waypoints: int = 200) -> list:
         """Plan a trajectory to target joint configuration.
         
         Args:
@@ -310,14 +307,23 @@ class RobotArmController:
     def _handle_ik_command(self):
         """Handle interactive IK command."""
         try:
+            # Ask user which hand to use
+            hand_choice = input("Which hand? (L/R): ").strip().upper()
+            if hand_choice == "L":
+                self.ee_name = "gripper_left"
+            elif hand_choice == "R":
+                self.ee_name = "gripper_right"
+            else:
+                print("Invalid choice. Using right gripper.")
+                self.ee_name = "gripper_right"
+            
+            self._setup_arm_joints()
+            
             x = float(input("Target X: "))
             y = float(input("Target Y: "))
             z = float(input("Target Z: "))
             
             target_pos = np.array([x, y, z])
-            
-            # Automatically select end effector based on target x-coordinate
-            self.select_end_effector_by_position(target_pos)
             
             # Solve IK
             ik_result = self.move_to_ik_target(target_pos)

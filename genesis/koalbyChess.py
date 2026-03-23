@@ -40,26 +40,24 @@ class KoalbyChessArmController(RobotArmController):
         self.scene.add_entity(
             gs.morphs.Box(
                 size=(0.4, 0.5, 0.05),
-                pos=(0.0, 0.45, 0.48),
+                pos=(0.0, 0.45, 0.55),
                 collision=True,
                 fixed=True,
             )
         )
         
-        # Add demo chess pieces
-        piece_spacing = 0.3 / 7  # Space 8 pieces across 0.3 width
-        piece_size = (0.03, 0.03, 0.06) # Small rectangular prisms for pieces
-        piece_z = 0.55  # Bottom of pieces rest on board surface (0.6 + 0.03)
+        # Add demo chess piece
+        piece_size = (0.015, 0.015, 0.03) # Small rectangular prism for piece
+        piece_z = 0.59  # Bottom of piece rests on board surface
+        piece_x = 0.0  # Center of board
         
-        for i in range(8):
-            piece_x = -0.15 + i * piece_spacing  # Center at 0.0, span from -0.15 to 0.15
-            self.scene.add_entity(
-                gs.morphs.Box(
-                    size=piece_size,
-                    pos=(piece_x, 0.3, piece_z),
-                    collision=True,
-                )
+        self.scene.add_entity(
+            gs.morphs.Box(
+                size=piece_size,
+                pos=(piece_x, 0.3, piece_z),
+                collision=True,
             )
+        )
         
         self.scene.build()
     
@@ -76,7 +74,7 @@ class KoalbyChessArmController(RobotArmController):
             self.ee_name = "gripper_right"
             self._setup_arm_joints()
 
-            ik_right = self.move_to_ik_target(right_midpoint, None)
+            ik_right = self.move_to_ik_target(right_midpoint)
             path_right = self.plan_trajectory(ik_right, num_waypoints=50)
             self.execute_trajectory(path_right, pause_steps=50)
 
@@ -92,7 +90,7 @@ class KoalbyChessArmController(RobotArmController):
             self.ee_name = "gripper_left"
             self._setup_arm_joints()
 
-            ik_left = self.move_to_ik_target(left_midpoint, None)
+            ik_left = self.move_to_ik_target(left_midpoint)
             path_left = self.plan_trajectory(ik_left, num_waypoints=50)
             self.execute_trajectory(path_left, pause_steps=50)
             
