@@ -18,6 +18,9 @@ scene = gs.Scene(
         camera_lookat=(0.0, 0.0, 0.5),
         camera_fov=40,
         max_FPS=60,
+    ),
+    rigid_options = gs.options.RigidOptions(
+        enable_neutral_collision=True
     )
 )
 
@@ -151,10 +154,21 @@ while True:
         save_choice = input("Save this position? (y/n): ").lower()
         if save_choice == 'y':
             label = input("Position label: ")
+
+            joint_qpos_dict = {}
+            ik_list = ik_result.tolist()
+
+            for joint in finley.joints:
+                if joint.name in config["joints"] and joint.n_dofs > 0:
+                    for idx in joint.dofs_idx_local:
+                        joint_qpos_dict[joint.name] = float(ik_list[idx])
+
             positions[label] = {
                 "arm": arm_side,
                 "target": [x, y, z],
-                "qpos": ik_result.tolist()
+                "raw_qpos": ik_result.tolist(),
+                "labeled_qpos": joint_qpos_dict
+
             }
             save_positions(positions)
             print(f"Saved as '{label}'")
