@@ -48,7 +48,10 @@ class RobotArmController:
         ]
         
         # Initialize Genesis
-        gs.init(backend=gs.cpu)
+        if torch.cuda.is_available():
+            gs.init(backend=gs.gpu)
+        else:
+            gs.init(backend=gs.cpu)
         self.scene = None
         self.robot = None
         self.ee_link = None
