@@ -162,29 +162,38 @@ class RobotArmController:
         else:
             print(f"Using {self.ee_name}")
     
-    def move_to_ik_target(self, target_pos: np.ndarray) -> torch.Tensor:
-        """Solve inverse kinematics for a target position.
+    def move_to_ik_target(self, target_pos: np.ndarray, target_quat: np.ndarray = None) -> torch.Tensor:
+        """Solve inverse kinematics for a target position and optional orientation.
         
         Args:
             target_pos: Target position [x, y, z]
-            target_quat: Target quaternion [x, y, z, w] (default: [0, 0, 0, 1])
+            target_quat: Target quaternion [x, y, z, w] (default: None)
             
         Returns:
             IK solution (joint angles)
         """
         
-        # Adjust for arm offset
-        adjusted_pos = torch.tensor(
-            [target_pos[0] + self.offset, target_pos[1], target_pos[2]],
+        # Convert target position to tensor
+        target_pos_tensor = torch.tensor(
+            target_pos,
             dtype=torch.float32
         )
         
         # Solve IK
-        ik_result = self.robot.inverse_kinematics(
-            link=self.ee_link,
-            pos=adjusted_pos,
-            dofs_idx_local=self.arm_dofs_idx_local
-        )
+        if target_quat is not None:
+            target_quat = torch.tensor(target_quat, dtype=torch.float32)
+            ik_result = self.robot.inverse_kinematics(
+                link=self.ee_link,
+                pos=target_pos_tensor,
+                quat=target_quat,
+                dofs_idx_local=self.arm_dofs_idx_local
+            )
+        else:
+            ik_result = self.robot.inverse_kinematics(
+                link=self.ee_link,
+                pos=target_pos_tensor,
+                dofs_idx_local=self.arm_dofs_idx_local
+            )
         
         print(f"IK result: {ik_result}")
         return ik_result
@@ -266,22 +275,239 @@ class RobotArmController:
         """
         self.control_gripper(force, duration_steps)
     
+    def align_gripper_to_quaternion(self, target_quat: np.ndarray = None, num_waypoints: int = 50):
+        """Align the gripper to a target quaternion by rotating the handspin motor.
+        
+        This function rotates the handspin joint to achieve the target gripper orientation.
+        
+        Args:
+            target_quat: Target quaternion [x, y, z, w] (default: [0, 0, 0, 1] = identity rotation)
+            num_waypoints: Number of interpolation steps for smooth rotation (default: 50)
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        # Default to identity quaternion if not specified
+        if target_quat is None:
+            target_quat = np.array([0.0, 0.0, 0.0, 1.0])
+        
+        # Get handspin joint index
+        handspin_joint_name = "handspin_left" if self.ee_name == "gripper_left" else "handspin_right"
+        
+        handspin_dof_idx = None
+        for joint in self.robot.joints:
+            if joint.name == handspin_joint_name and joint.n_dofs > 0:
+                handspin_dof_idx = joint.dofs_idx_local[0]
+                break
+        
+        if handspin_dof_idx is None:
+            print(f"Warning: Could not find {handspin_joint_name} joint")
+            return False
+        
+        # Get current joint configuration
+        current_qpos = self.robot.get_qpos().clone()
+        current_handspin_angle = current_qpos[handspin_dof_idx].item()
+        
+        print(f"\nAligning gripper to target quaternion")
+        print(f"Target quaternion: [{target_quat[0]:.4f}, {target_quat[1]:.4f}, {target_quat[2]:.4f}, {target_quat[3]:.4f}]")
+        
+        # Search for the handspin angle that achieves the target quaternion
+        # Sample a range of angles to find the best match
+        angle_search_range = np.linspace(-np.pi, np.pi, 36)  # 10-degree increments
+        best_angle = current_handspin_angle
+        best_error = float('inf')
+        
+        for test_angle in angle_search_range:
+            test_qpos = current_qpos.clone()
+            test_qpos[handspin_dof_idx] = test_angle
+            self.robot.control_dofs_position(test_qpos)
+            
+            # Step a few times to let physics settle
+            for _ in range(2):
+                self.scene.step()
+            
+            # Get current gripper quaternion
+            quat = self.ee_link.quat
+            current_quat = quat.numpy() if hasattr(quat, 'numpy') else np.array(quat)
+            
+            # Calculate quaternion error (dot product, absolute value for angle difference)
+            quat_dot = abs(np.dot(current_quat, target_quat))
+            quat_error = np.arccos(np.clip(quat_dot, -1.0, 1.0))
+            
+            if quat_error < best_error:
+                best_error = quat_error
+                best_angle = test_angle
+        
+        print(f"Found best handspin angle: {best_angle:.4f} rad ({np.degrees(best_angle):.2f}°)")
+        print(f"Quaternion error: {best_error:.6f} rad ({np.degrees(best_error):.4f}°)")
+        
+        # Interpolate smoothly from current angle to best angle
+        angles = np.linspace(current_handspin_angle, best_angle, num_waypoints)
+        
+        # Execute trajectory
+        for angle in angles:
+            new_qpos = current_qpos.clone()
+            new_qpos[handspin_dof_idx] = angle
+            self.robot.control_dofs_position(new_qpos)
+            self.scene.step()
+        
+        # Verify final orientation
+        final_orientation = self.get_gripper_orientation()
+        final_quat = final_orientation['quaternion']
+        final_error = np.arccos(np.clip(abs(np.dot(final_quat, target_quat)), -1.0, 1.0))
+        
+        print(f"Gripper alignment complete")
+        print(f"Final quaternion: [{final_quat[0]:.4f}, {final_quat[1]:.4f}, {final_quat[2]:.4f}, {final_quat[3]:.4f}]")
+        print(f"Final quaternion error: {final_error:.6f} rad ({np.degrees(final_error):.4f}°)")
+        
+        return final_error < 0.1  # Success if error < ~5.7 degrees
+    
+    def align_gripper_z_axis(self, target_angle: float = 0.0, num_waypoints: int = 50):
+        """Align the gripper's z-axis with the world's z-axis by rotating the handspin motor.
+        
+        This function rotates the handspin joint to align the gripper's orientation such that
+        its z-axis points straight up/down (aligned with world z-axis).
+        
+        Args:
+            target_angle: Target angle for the handspin joint in radians (default: 0.0)
+            num_waypoints: Number of interpolation steps for smooth rotation (default: 50)
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        # Get handspin joint index based on current end effector
+        handspin_joint_name = "handspin_left" if self.ee_name == "gripper_left" else "handspin_right"
+        
+        # Find the handspin joint DOF index
+        handspin_dof_idx = None
+        for joint in self.robot.joints:
+            if joint.name == handspin_joint_name and joint.n_dofs > 0:
+                handspin_dof_idx = joint.dofs_idx_local[0]
+                break
+        
+        if handspin_dof_idx is None:
+            print(f"Warning: Could not find {handspin_joint_name} joint")
+            return False
+        
+        # Get current joint configuration
+        current_qpos = self.robot.get_qpos().clone()
+        
+        # Create interpolated path from current handspin angle to target angle
+        current_handspin_angle = current_qpos[handspin_dof_idx].item()
+        
+        print(f"\nAligning gripper z-axis with world z-axis")
+        print(f"Joint: {handspin_joint_name}")
+        print(f"Current angle: {current_handspin_angle:.4f} rad ({np.degrees(current_handspin_angle):.2f}°)")
+        print(f"Target angle: {target_angle:.4f} rad ({np.degrees(target_angle):.2f}°)")
+        
+        # Interpolate between current and target angle
+        angles = np.linspace(current_handspin_angle, target_angle, num_waypoints)
+        
+        for angle in angles:
+            # Create a copy of current qpos and update handspin joint
+            new_qpos = current_qpos.clone()
+            new_qpos[handspin_dof_idx] = angle
+            
+            # Control the robot to this configuration
+            self.robot.control_dofs_position(new_qpos)
+            self.scene.step()
+        
+        # Verify final angle
+        final_qpos = self.robot.get_qpos().clone()
+        final_angle = final_qpos[handspin_dof_idx].item()
+        angle_error = abs(final_angle - target_angle)
+        
+        print(f"Gripper z-axis alignment complete")
+        print(f"Target angle: {target_angle:.4f} rad ({np.degrees(target_angle):.2f}°)")
+        print(f"Final angle: {final_angle:.4f} rad ({np.degrees(final_angle):.2f}°)")
+        print(f"Angle error: {angle_error:.6f} rad ({np.degrees(angle_error):.4f}°)")
+        
+        return True
+    
+    def get_gripper_orientation(self) -> dict:
+        """Get the current orientation of the gripper.
+        
+        Returns:
+            Dictionary containing:
+                - 'quaternion': [x, y, z, w] quaternion
+                - 'euler_angles': [roll, pitch, yaw] in radians
+                - 'z_axis': [x, y, z] normalized z-axis of gripper in world frame
+                - 'handspin_angle': Current handspin joint angle in radians
+        """
+        # Get gripper pose
+        gripper_quat = self.ee_link.quat.clone()
+        
+        # Convert quaternion to rotation matrix to extract axes
+        def quat_to_rotation_matrix(q):
+            """Convert quaternion [x, y, z, w] to rotation matrix."""
+            x, y, z, w = q[0], q[1], q[2], q[3]
+            
+            R = np.array([
+                [1 - 2*(y**2 + z**2), 2*(x*y - w*z), 2*(x*z + w*y)],
+                [2*(x*y + w*z), 1 - 2*(x**2 + z**2), 2*(y*z - w*x)],
+                [2*(x*z - w*y), 2*(y*z + w*x), 1 - 2*(x**2 + y**2)]
+            ])
+            return R
+        
+        def rotation_matrix_to_euler(R):
+            """Convert rotation matrix to Euler angles [roll, pitch, yaw]."""
+            sy = np.sqrt(R[0, 0]**2 + R[1, 0]**2)
+            singular = sy < 1e-6
+            
+            if not singular:
+                x = np.arctan2(R[2, 1], R[2, 2])
+                y = np.arctan2(-R[2, 0], sy)
+                z = np.arctan2(R[1, 0], R[0, 0])
+            else:
+                x = np.arctan2(-R[1, 2], R[1, 1])
+                y = np.arctan2(-R[2, 0], sy)
+                z = 0
+            
+            return np.array([x, y, z])
+        
+        # Get handspin angle
+        handspin_joint_name = "handspin_left" if self.ee_name == "gripper_left" else "handspin_right"
+        handspin_angle = 0.0
+        for joint in self.robot.joints:
+            if joint.name == handspin_joint_name and joint.n_dofs > 0:
+                dof_idx = joint.dofs_idx_local[0]
+                handspin_angle = self.robot.qpos[dof_idx].item()
+                break
+        
+        # Convert quaternion to rotation matrix
+        R = quat_to_rotation_matrix(gripper_quat.numpy())
+        
+        # Extract z-axis (third column of rotation matrix)
+        z_axis = R[:, 2]
+        
+        # Get Euler angles
+        euler_angles = rotation_matrix_to_euler(R)
+        
+        return {
+            'quaternion': gripper_quat.numpy(),
+            'euler_angles': euler_angles,
+            'z_axis': z_axis,
+            'handspin_angle': handspin_angle
+        }
+    
     def run_interactive_loop(self):
         """Run the main interactive control loop."""
         print("\n" + "="*50)
         print("Robot Arm Control - Interactive Loop")
         print("="*50)
         print("Commands:")
-        print("  'ik'  - Move arm to position using inverse kinematics")
-        print("  'r'   - Execute a cached trajectory")
-        print("  'o'   - Open gripper")
-        print("  'cl'  - Close gripper")
-        print("  'c'   - Clear all cached paths")
-        print("  'q'   - Quit")
+        print("  'ik'    - Move arm to position using inverse kinematics")
+        print("  'r'     - Execute a cached trajectory")
+        print("  'o'     - Open gripper")
+        print("  'cl'    - Close gripper")
+        print("  'align' - Align gripper z-axis with world z-axis")
+        print("  'info'  - Get gripper orientation info")
+        print("  'c'     - Clear all cached paths")
+        print("  'q'     - Quit")
         print("="*50 + "\n")
         
         while True:
-            cmd = input("\nEnter command (ik/r/o/cl/c/q): ").strip().lower()
+            cmd = input("\nEnter command (ik/r/o/cl/align/info/c/q): ").strip().lower()
             
             if cmd == "q":
                 self._save_cache()
@@ -298,6 +524,12 @@ class RobotArmController:
             elif cmd == "cl":
                 self.close_gripper()
             
+            elif cmd == "align":
+                self._handle_align_command()
+            
+            elif cmd == "info":
+                self._handle_info_command()
+            
             elif cmd == "ik":
                 self._handle_ik_command()
             
@@ -305,7 +537,7 @@ class RobotArmController:
                 self._handle_replay_command()
             
             else:
-                print("Unknown command. Try 'ik', 'r', 'c', or 'q'")
+                print("Unknown command. Try 'ik', 'r', 'o', 'cl', 'align', 'info', 'c', or 'q'")
     
     def _handle_ik_command(self):
         """Handle interactive IK command."""
@@ -367,6 +599,49 @@ class RobotArmController:
         
         path = self.cached_paths[key]
         self.execute_trajectory(path)
+    
+    def _handle_align_command(self):
+        """Handle interactive gripper alignment command."""
+        try:
+            quat_input = input("Target quaternion [x, y, z, w] (default [0, 0, 0, 1]): ").strip()
+            
+            if quat_input:
+                quat_vals = [float(x) for x in quat_input.replace('[', '').replace(']', '').split(',')]
+                if len(quat_vals) != 4:
+                    raise ValueError("Quaternion must have 4 components")
+                target_quat = np.array(quat_vals)
+            else:
+                target_quat = None  # Use default identity quaternion
+            
+            num_steps = int(input("Number of interpolation steps (default 50): ") or "50")
+            
+            self.align_gripper_to_quaternion(target_quat=target_quat, num_waypoints=num_steps)
+            
+        except ValueError:
+            print("Invalid input. Please enter valid numbers (e.g., '0, 0, 0, 1').")
+        except Exception as e:
+            print(f"Error during alignment: {e}")
+    
+    def _handle_info_command(self):
+        """Handle interactive gripper info command."""
+        try:
+            info = self.get_gripper_orientation()
+            
+            print("\n" + "="*50)
+            print("Gripper Orientation Information")
+            print("="*50)
+            print(f"Quaternion (x, y, z, w): {info['quaternion']}")
+            euler_deg = np.degrees(info['euler_angles'])
+            print(f"Euler Angles (roll, pitch, yaw):")
+            print(f"  Roll:  {euler_deg[0]:.2f}°")
+            print(f"  Pitch: {euler_deg[1]:.2f}°")
+            print(f"  Yaw:   {euler_deg[2]:.2f}°")
+            print(f"Z-axis in world frame: {info['z_axis']}")
+            print(f"Handspin angle: {info['handspin_angle']:.4f} rad ({np.degrees(info['handspin_angle']):.2f}°)")
+            print("="*50 + "\n")
+            
+        except Exception as e:
+            print(f"Error getting gripper info: {e}")
 
 
 # -------------------------
