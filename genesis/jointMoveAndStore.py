@@ -127,7 +127,10 @@ while True:
         z = float(input(f"Target Z: "))
         
         target_pos = torch.tensor([x + config["offset"], y, z], dtype=torch.float32)
-        
+        current_qpos = finley.get_qpos()
+
+        qpos_goal = current_qpos.clone()
+
         # IK
         ik_result = finley.inverse_kinematics(
             link=ee_link,
@@ -135,12 +138,17 @@ while True:
             quat=np.array([0, 0, 0, 1]),
             dofs_idx_local=arm_dofs
         )
+
+        for idx in arm_dofs:
+            qpos_goal[idx] = ik_result[idx]
         
         # Path Planning
         path = finley.plan_path(
-            qpos_goal=ik_result,
+            qpos_goal=qpos_goal,
             num_waypoints=200,
         )
+
+        print(qpos_goal)
         
         print("Executing trajectory...")
         for waypoint in path:
@@ -159,14 +167,13 @@ while True:
             ik_list = ik_result.tolist()
 
             for joint in finley.joints:
-                if joint.name in config["joints"] and joint.n_dofs > 0:
-                    for idx in joint.dofs_idx_local:
-                        joint_qpos_dict[joint.name] = float(ik_list[idx])
+                # if joint.name in config["joints"] and joint.n_dofs > 0:
+                for idx in joint.dofs_idx_local:
+                    joint_qpos_dict[joint.name] = float(ik_list[idx])
 
             positions[label] = {
                 "arm": arm_side,
                 "target": [x, y, z],
-                "raw_qpos": ik_result.tolist(),
                 "labeled_qpos": joint_qpos_dict
 
             }
