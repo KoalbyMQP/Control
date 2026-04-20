@@ -110,8 +110,14 @@ class RobotArmController:
         elif self.ee_name == "gripper_right":
             self.offset = -0.145
             joint_names = self.right_arm_joints
+        elif self.ee_name == "wrist_left":
+            self.offset = 0.145
+            joint_names = self.left_arm_joints
+        elif self.ee_name == "wrist_right":
+            self.offset = -0.145
+            joint_names = self.right_arm_joints
         else:
-            raise ValueError("End effector must be 'gripper_left' or 'gripper_right'")
+            raise ValueError("End effector must be 'gripper_left' or 'gripper_right' or 'wrist_left' or 'wrist_right'")
         
         # Extract DOF indices for arm joints
         self.arm_dofs_idx_local = []
