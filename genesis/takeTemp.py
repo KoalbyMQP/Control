@@ -9,6 +9,8 @@ from scipy.spatial.transform import Rotation as R
 class KoalbyThermometerController(RobotArmController):
     def __init__(self):
         super().__init__(urdf_file='SwappingURDF//urdf//SwappingURDF.urdf', ee_name='wrist_left')
+        self.prev_target_point = None
+        self.forehead_point = None
 
     def _setup_scene(self):
         """Initialize the Genesis scene and add entities."""
@@ -118,7 +120,7 @@ class KoalbyThermometerController(RobotArmController):
         koalby_shoulder_pos = np.asarray((0.145, 0.0, 0.735))
         target_dist = np.linalg.norm(head_point - koalby_shoulder_pos)
         head_to_shoulder_unit_vector = -(head_point - koalby_shoulder_pos) / np.linalg.norm(head_point - koalby_shoulder_pos)
-        near_next_point_thresh = 0.1 #if current pos is close,then skip planning and move directly to target
+        near_next_point_thresh = 0.05#if current prev target pos is close,then skip planning and move directly to target
         print(f"Target point to shoulder distance: {np.linalg.norm(head_point - koalby_shoulder_pos)}")
         
         max_reach = 0.25 #HARDCODED VALUE, CHECK FOR VALIDITY
@@ -128,7 +130,10 @@ class KoalbyThermometerController(RobotArmController):
         
         target_quat = R.align_vectors([np.array([0,1, 0])], [-head_to_shoulder_unit_vector])[0].as_quat()
 
-        #is_near_next_point = np.linalg.norm(robot.get_link(self.ee_name).pos - target_point) < near_next_point_thresh
+        if(self.prev_target_point is not None): #defaults to not near (ex. first time running)
+            is_near_next_point = np.linalg.norm(self.prev_target_point - target_point) < near_next_point_thresh
+        else:
+            is_near_next_point = False
 
         joint_names = [
             "shoulderspin_right",
@@ -156,21 +161,11 @@ class KoalbyThermometerController(RobotArmController):
         for idx in left_arm_indices:#iteratevly replace
             final_qpos[idx] = qpos[idx]
 
-        # if not is_near_next_point:
-        #     print("planning path")
-        #     path = robot.plan_path(
-        #         qpos_goal = final_qpos,
-        #         num_waypoints = 30,
-        #         resolution = 0.5,
-        #         timeout = 5.0,
-        #         ignore_collision = False,
-        #         #smooth_path=False,
-        #         max_nodes = 500
-        #     )
-        # else:
-        #     print("calling direct move, skipping planning")
-        #     update_therm_tracking(final_qpos, robot)
-        path = robot.plan_path(
+        self.prev_target_point = target_point
+
+        if not is_near_next_point:
+            print("planning path")
+            path = robot.plan_path(
                 qpos_goal = final_qpos,
                 num_waypoints = 30,
                 resolution = 0.5,
@@ -178,32 +173,58 @@ class KoalbyThermometerController(RobotArmController):
                 ignore_collision = False,
                 #smooth_path=False,
                 max_nodes = 500
-        )
+            )
+            print("path planned")
+
+            for wp in path:#within the individual waypoint, step through paths "waypoints"
+                robot.control_dofs_position(wp)
+                self.scene.step()
+            #time.sleep(0.02) #small sleep to slow down motion for visibility
+        else:
+            print("calling direct move, skipping planning")
+            self.update_therm_tracking(final_qpos, robot)
+        # path = robot.plan_path(
+        #         qpos_goal = final_qpos,
+        #         num_waypoints = 30,
+        #         resolution = 0.5,
+        #         timeout = 5.0,
+        #         ignore_collision = False,
+        #         #smooth_path=False,
+        #         max_nodes = 500
+        # )
+
+        # for wp in path:#within the individual waypoint, step through paths "waypoints"
+        #     robot.control_dofs_position(wp)
+        #     self.scene.step()
+        #     #time.sleep(0.02) #small sleep to slow down motion for visibility
 
         self.scene.clear_debug_objects()#clear previous debug visuals
         self.scene.draw_debug_arrow(head_point, head_to_shoulder_unit_vector/10, radius=0.005, color=(1.0, 0.0, 0.0, 0.5))#unit vector made 1cm for visual clarity
         self.scene.draw_debug_sphere(pos=head_point, radius=0.01, color=(0.0, 1.0, 0.0, 0.5)) #head point in green
         self.scene.draw_debug_sphere(pos=target_point, radius=0.01)
-        print("path planned")
+        
 
-        for wp in path:#within the individual waypoint, step through paths "waypoints"
-            robot.control_dofs_position(wp)
-            self.scene.step()
-            #time.sleep(0.02) #small sleep to slow down motion for visibility
+        
             
         for _ in range(50):#after reaching final waypoint, step a few frames to allow robot to reach final position
                 self.scene.step()
                 #time.sleep(0.02)
 
 
-    def point_at_moving_head(self, robot):
+    def point_at_moving_sim_head(self, robot):
         t = 0.0
         while True:
-            head_point = np.array([0.1 + 0.1*math.sin(t), 0.32, 1.0 + 0.1*math.cos(t) ]) #moving head point
+            head_point = np.array([0.1 + 0.1*math.sin(t), 0.52, 0.8 + 0.1*math.cos(t) ]) #moving head point
+            self.forehead_point = head_point
             t += 0.1
             t = t % (2 * math.pi)#wraps t to circle
-            self.point_therm(head_point, robot)
-            #time.sleep(0.01)
+            print(head_point)
+            self.scene.draw_debug_sphere(pos=head_point, radius=0.02, color=(0.0, 0.0, 1.0, 0.5)) #head point in green
+            self.point_therm(self.forehead_point, robot)
+            time.sleep(0.01)
+    
+    def update_forehead_point(self, point):#function called outside to update the internal forehead_point
+        self.forehead_point
 
 def init_genesis():
     print("Running Genesis test...")
@@ -264,7 +285,7 @@ def init_genesis():
 if __name__ == "__main__":
     ctrlr = KoalbyThermometerController()
     test_head_pos = [0.1, 0.3, 0.8]
-    ctrlr.point_at_moving_head(ctrlr.robot)
+    ctrlr.point_at_moving_sim_head(ctrlr.robot)
     #ctrlr.point_therm(test_head_pos, ctrlr.robot)
     # while(True):
     #     time.sleep(1)
