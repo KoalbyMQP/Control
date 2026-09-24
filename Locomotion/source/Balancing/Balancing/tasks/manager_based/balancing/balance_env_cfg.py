@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import math
+from pathlib import Path
 
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
@@ -60,7 +61,7 @@ class BalancingSceneCfg(InteractiveSceneCfg):
     robot = ArticulationCfg(
         prim_path="{ENV_REGEX_NS}/Robot",
         spawn=sim_utils.UsdFileCfg(
-            usd_path="../AvaUSD/Humanoid_URDF_9-10.usd",
+            usd_path=str(Path("~/Control/AvaUSD/Humanoid_URDF_9-10.usd").expanduser()),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                 rigid_body_enabled=True,
                 max_linear_velocity=1000.0,  # units?
@@ -87,6 +88,13 @@ class BalancingSceneCfg(InteractiveSceneCfg):
                 stiffness=10.0,
                 damping=1.0
             ),
+            "all": ImplicitActuatorCfg(  # for now, implicit. Later, explicit.
+                joint_names_expr=[".*"],  # motor is applied to all joints
+                effort_limit_sim=400.0,
+                velocity_limit_sim=100.0,
+                stiffness=10.0,
+                damping=1.0
+                        ),
         },
     )
 
@@ -124,6 +132,9 @@ class ObservationsCfg:
         # observation terms (order preserved)
         joint_pos_rel = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel_rel = ObsTerm(func=mdp.joint_vel_rel)
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel)
+        projected_gravity = ObsTerm(func=mdp.projected_gravity)
+        last_action = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -145,8 +156,8 @@ class EventCfg:
         params={
             "asset_cfg": SceneEntityCfg("robot",
                                         joint_names=[".*"]),  # all joints
-            "position_range": (-1.0, 1.0),  # radians
-            "velocity_range": (-0.5, 0.5),  # rad/s ?
+            "position_range": (-0.1, 0.1),  # radians
+            "velocity_range": (-0.1, 0.1),  # rad/s ?
         },
     )
 
@@ -226,6 +237,8 @@ class RewardsCfg:
     #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"])},
     # )
 
+    vertical = RewTerm(func=mdp.standing_straight_reward, weight=1.0, params={"asset_cfg": SceneEntityCfg("robot")})
+
 
 @configclass
 class TerminationsCfg:
@@ -246,7 +259,7 @@ class TerminationsCfg:
 
 
 @configclass
-class BalancingEnvCfg(ManagerBasedRLEnvCfg):
+class BalanceEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
     scene: BalancingSceneCfg = BalancingSceneCfg(num_envs=4096, env_spacing=4.0)
     # Basic settings

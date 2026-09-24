@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Installation script for the 'Locomotion' python package."""
+"""Installation script for the 'Balancing' python package."""
 
 import os
 import toml
