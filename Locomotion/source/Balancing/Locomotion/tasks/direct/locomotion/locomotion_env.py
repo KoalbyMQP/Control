@@ -15,13 +15,13 @@ from isaaclab.envs import DirectRLEnv
 from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
 from isaaclab.utils.math import sample_uniform
 
-from .locomotion_env_cfg import LocomotionEnvCfg
+from .balance_env_cfg import BalancingEnvCfg
 
 
-class LocomotionEnv(DirectRLEnv):
-    cfg: LocomotionEnvCfg
+class BalancingEnv(DirectRLEnv):
+    cfg: BalancingEnvCfg
 
-    def __init__(self, cfg: LocomotionEnvCfg, render_mode: str | None = None, **kwargs):
+    def __init__(self, cfg: BalancingEnvCfg, render_mode: str | None = None, **kwargs):
         super().__init__(cfg, render_mode, **kwargs)
 
         self._cart_dof_idx, _ = self.robot.find_joints(self.cfg.cart_dof_name)

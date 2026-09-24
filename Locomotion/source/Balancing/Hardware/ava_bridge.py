@@ -1,5 +1,5 @@
-from ..Balance.balance_env_cfg import LocomotionSceneCfg
-robot = LocomotionSceneCfg.robot
+from ..Balance.balance_env_cfg import BalancingSceneCfg
+robot = BalancingSceneCfg.robot
 
 class ava_bridge:
     def connect(self):

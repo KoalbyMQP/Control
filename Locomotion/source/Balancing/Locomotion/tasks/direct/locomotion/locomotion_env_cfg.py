@@ -13,7 +13,7 @@ from isaaclab.utils import configclass
 
 
 @configclass
-class LocomotionEnvCfg(DirectRLEnvCfg):
+class BalancingEnvCfg(DirectRLEnvCfg):
     # env
     decimation = 2
     episode_length_s = 5.0

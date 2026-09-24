@@ -33,7 +33,7 @@ from . import mdp
 
 
 @configclass
-class LocomotionSceneCfg(InteractiveSceneCfg):
+class BalancingSceneCfg(InteractiveSceneCfg):
     """Configuration for a ava scene."""
 
     # ground plane
@@ -246,9 +246,9 @@ class TerminationsCfg:
 
 
 @configclass
-class LocomotionEnvCfg(ManagerBasedRLEnvCfg):
+class BalancingEnvCfg(ManagerBasedRLEnvCfg):
     # Scene settings
-    scene: LocomotionSceneCfg = LocomotionSceneCfg(num_envs=4096, env_spacing=4.0)
+    scene: BalancingSceneCfg = BalancingSceneCfg(num_envs=4096, env_spacing=4.0)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
