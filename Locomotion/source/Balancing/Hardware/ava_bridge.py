@@ -1,5 +1,5 @@
-
-
+from ..Balance.balance_env_cfg import LocomotionSceneCfg
+robot = LocomotionSceneCfg.robot
 
 class ava_bridge:
     def connect(self):
@@ -8,7 +8,14 @@ class ava_bridge:
 
 
     def send_joint_positions(self, positions):
-        # Send positions to physical motors
+        # 1. Get current joint positions (in radians or meters)
+        joint_positions = robot.data.joint_pos
+
+        # 2. Get current joint velocities (in rad/s or m/s)
+        joint_velocities = robot.data.joint_vel
+
+        # 3. Get measured joint efforts / applied motor torques 
+        joint_efforts = robot.data.measured_joint_efforts
         pass
 
     def read_joint_positions(self):
@@ -34,7 +41,7 @@ class ava_bridge:
 
 
 """while simulation_running:
-    
+
 
 
 
